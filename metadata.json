@@ -1,0 +1,5 @@
+{
+  "name": "FlashLearn",
+  "description": "A feature-rich flashcard study application with multiple learning modes including Review, Multiple Choice, True/False, and a matching game. Build, manage, and master your study sets with ease.",
+  "requestFramePermissions": []
+}
