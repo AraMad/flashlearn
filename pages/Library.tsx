@@ -48,7 +48,7 @@ export const Library: React.FC<LibraryProps> = ({ onSelectSet, onEditSet }) => {
     .sort((a, b) => b.updatedAt - a.updatedAt);
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
+    <div className="space-y-8 animate-in fade-in duration-500 flex flex-col min-h-[calc(100vh-8rem)]">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-3xl font-bold text-slate-100">Your Library</h2>
@@ -192,6 +192,14 @@ export const Library: React.FC<LibraryProps> = ({ onSelectSet, onEditSet }) => {
           ))}
         </div>
       )}
+
+      {/* Attribution Footer */}
+      <div className="mt-auto pt-12 pb-4 text-center">
+        <p className="text-[11px] text-slate-600 font-medium tracking-wide">
+          demo AI app by <a href="https://www.starksoft.online/ai-powered-prototyping-service-starksoft" target="_blank" rel="noopener noreferrer" className="text-slate-500 underline decoration-slate-700 hover:text-indigo-400 hover:decoration-indigo-500 transition-all">StarkSoft</a>
+        </p>
+      </div>
+
       <style>{`
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
