@@ -1,8 +1,8 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { DataStore } from '../../store';
 import { CardEntity } from '../../types';
-import { ChevronLeft, Timer } from 'lucide-react';
+import { ChevronLeft, Timer, Trophy, RotateCcw } from 'lucide-react';
 
 interface Tile {
   id: string;
@@ -19,9 +19,19 @@ export const MatchMode: React.FC<{ setId: string, onExit: () => void }> = ({ set
   const [seconds, setSeconds] = useState(0);
   const [isFinished, setIsFinished] = useState(false);
   const [mistakes, setMistakes] = useState(0);
+  const [bestTime, setBestTime] = useState<number | null>(null);
 
+  // Load best time from localStorage
   useEffect(() => {
+    const stored = localStorage.getItem(`match_best_${setId}`);
+    if (stored) {
+      setBestTime(parseInt(stored, 10));
+    }
+  }, [setId]);
+
+  const initGame = useCallback(() => {
     const all = DataStore.getCards().filter(c => c.setId === setId);
+    // Use 6 pairs (12 tiles total)
     const pool = all.sort(() => Math.random() - 0.5).slice(0, 6);
     
     const gameTiles: Tile[] = [];
@@ -31,13 +41,40 @@ export const MatchMode: React.FC<{ setId: string, onExit: () => void }> = ({ set
     });
 
     setTiles(gameTiles.sort(() => Math.random() - 0.5));
+    setSeconds(0);
+    setMistakes(0);
+    setIsFinished(false);
+    setSelected(null);
+    setMismatchedIds([]);
+  }, [setId]);
+
+  useEffect(() => {
+    initGame();
+  }, [initGame]);
+
+  // Timer logic that stops when finished
+  useEffect(() => {
+    if (isFinished) return;
 
     const timer = setInterval(() => {
       setSeconds(s => s + 1);
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [setId]);
+  }, [isFinished]);
+
+  // Handle high score
+  useEffect(() => {
+    if (isFinished) {
+      const currentBest = localStorage.getItem(`match_best_${setId}`);
+      const currentSeconds = seconds;
+      
+      if (!currentBest || currentSeconds < parseInt(currentBest, 10)) {
+        localStorage.setItem(`match_best_${setId}`, currentSeconds.toString());
+        setBestTime(currentSeconds);
+      }
+    }
+  }, [isFinished, setId, seconds]);
 
   const handleTileClick = (tile: Tile) => {
     if (tile.isMatched || mismatchedIds.length > 0) return;
@@ -73,41 +110,79 @@ export const MatchMode: React.FC<{ setId: string, onExit: () => void }> = ({ set
 
   if (isFinished) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-8 animate-in zoom-in">
-        <div className="bg-amber-600/20 p-8 rounded-full text-amber-500 border border-amber-500/30 mb-4">
-           <Timer size={64} />
+      <div className="flex flex-col items-center justify-center min-h-[70vh] text-center space-y-8 animate-in zoom-in">
+        <div className="relative">
+          <div className="bg-amber-600/20 p-8 rounded-full text-amber-500 border border-amber-500/30 mb-4 animate-bounce">
+             <Trophy size={64} />
+          </div>
+          {bestTime === seconds && (
+            <div className="absolute -top-2 -right-2 bg-emerald-500 text-white text-[10px] font-black px-2 py-1 rounded-md rotate-12 shadow-lg">NEW BEST!</div>
+          )}
         </div>
+        
         <h2 className="text-4xl font-black text-slate-100">Game Over!</h2>
-        <div className="flex gap-12">
+        
+        <div className="flex gap-8 md:gap-12">
            <div className="text-center">
-             <div className="text-5xl font-black text-indigo-400">{seconds}s</div>
-             <div className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-1">Time</div>
+             <div className="text-4xl md:text-5xl font-black text-indigo-400">{seconds}s</div>
+             <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Time</div>
            </div>
            <div className="text-center">
-             <div className="text-5xl font-black text-red-500">{mistakes}</div>
-             <div className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-1">Mistakes</div>
+             <div className="text-4xl md:text-5xl font-black text-emerald-500">{bestTime}s</div>
+             <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Best</div>
+           </div>
+           <div className="text-center">
+             <div className="text-4xl md:text-5xl font-black text-red-500">{mistakes}</div>
+             <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Mistakes</div>
            </div>
         </div>
-        <button onClick={onExit} className="px-12 py-4 bg-indigo-600 text-white font-bold rounded-2xl hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-900/20">Return to Set</button>
+
+        <div className="flex flex-col sm:flex-row gap-4 w-full max-w-md pt-4">
+          <button 
+            onClick={initGame}
+            className="flex-1 py-4 bg-slate-900 text-slate-100 border border-slate-800 rounded-2xl font-bold flex items-center justify-center gap-3 hover:bg-slate-800 active:scale-95 transition-all"
+          >
+            <RotateCcw size={20} /> Retake
+          </button>
+          <button 
+            onClick={onExit} 
+            className="flex-1 py-4 bg-indigo-600 text-white font-bold rounded-2xl hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-900/20 active:scale-95"
+          >
+            Finish
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 py-8 animate-in slide-in-from-bottom duration-300">
-      <div className="flex items-center justify-between">
-        <button onClick={onExit} className="p-2 text-slate-500 hover:text-slate-100 transition-colors"><ChevronLeft size={24} /></button>
+    <div className="fixed inset-0 md:relative md:inset-auto h-screen md:h-[80vh] bg-slate-950 flex flex-col p-4 md:p-0 animate-in slide-in-from-bottom duration-300 overflow-hidden">
+      <div className="flex items-center justify-between shrink-0 mb-4">
+        <button onClick={onExit} className="p-2 text-slate-500 hover:text-slate-100 transition-colors">
+          <ChevronLeft size={24} />
+        </button>
         <div className="flex items-center gap-4">
            <div className="flex items-center gap-2 px-4 py-1.5 bg-slate-900 rounded-full border border-slate-800 text-slate-300 font-bold">
              <Timer size={16} className="text-amber-500" />
              {seconds}s
            </div>
-           <div className="hidden sm:block text-xs font-black text-slate-600 uppercase tracking-widest">Match all pairs</div>
+           {bestTime && (
+             <div className="hidden sm:flex items-center gap-2 px-4 py-1.5 bg-slate-900 rounded-full border border-slate-800 text-emerald-500 font-bold">
+                <Trophy size={14} />
+                {bestTime}s
+             </div>
+           )}
         </div>
         <div className="w-8" />
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      {/* 
+          Grid optimized for viewport:
+          Mobile: 3 columns, 4 rows (12 items)
+          Desktop: 4 columns, 3 rows (12 items)
+          Uses flex-1 and h-full with grid-rows to prevent any overflow.
+      */}
+      <div className="flex-1 grid grid-cols-3 md:grid-cols-4 grid-rows-4 md:grid-rows-3 gap-2 md:gap-4 h-full pb-4">
         {tiles.map(tile => {
           const isSelected = selected?.id === tile.id;
           const isMismatched = mismatchedIds.includes(tile.id);
@@ -116,14 +191,16 @@ export const MatchMode: React.FC<{ setId: string, onExit: () => void }> = ({ set
             <button
               key={tile.id}
               onClick={() => handleTileClick(tile)}
-              className={`aspect-square p-4 rounded-2xl text-sm md:text-base font-bold transition-all transform flex items-center justify-center text-center shadow-sm border-2 ${
+              className={`relative h-full w-full p-2 md:p-4 rounded-xl md:rounded-2xl transition-all transform flex items-center justify-center text-center shadow-sm border-2 overflow-hidden ${
                 tile.isMatched ? 'opacity-0 scale-75 pointer-events-none' :
                 isMismatched ? 'bg-red-500 border-red-500 text-white animate-shake' :
                 isSelected ? 'bg-indigo-600 border-indigo-600 text-white scale-105 shadow-[0_0_20px_rgba(79,70,229,0.4)] z-10' :
-                'bg-slate-900 border-slate-800 text-slate-300 hover:border-indigo-500 hover:bg-slate-800'
+                'bg-slate-900 border-slate-800 text-slate-300 hover:border-indigo-500 hover:bg-slate-800 active:scale-95'
               }`}
             >
-              {tile.text}
+              <span className="text-[10px] xs:text-xs sm:text-sm md:text-base font-bold leading-tight line-clamp-4 break-words">
+                {tile.text}
+              </span>
             </button>
           );
         })}
@@ -132,11 +209,14 @@ export const MatchMode: React.FC<{ setId: string, onExit: () => void }> = ({ set
       <style>{`
         @keyframes shake {
           0%, 100% { transform: translateX(0); }
-          25% { transform: translateX(-5px); }
-          75% { transform: translateX(5px); }
+          25% { transform: translateX(-4px); }
+          75% { transform: translateX(4px); }
         }
         .animate-shake {
           animation: shake 0.2s ease-in-out infinite;
+        }
+        @media (max-height: 500px) {
+          .line-clamp-4 { -webkit-line-clamp: 2; }
         }
       `}</style>
     </div>

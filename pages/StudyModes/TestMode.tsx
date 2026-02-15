@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { DataStore } from '../../store';
 import { CardEntity, SetSummary } from '../../types';
-import { ChevronLeft, FileText, ChevronDown, Check, X, ArrowRight, RotateCcw, Award } from 'lucide-react';
+import { ChevronLeft, FileText, ChevronDown, Check, X, ArrowRight, RotateCcw, Award, Layers } from 'lucide-react';
 
 type TestState = 'setup' | 'running' | 'results';
 type QuestionType = 'TF' | 'MCQ' | 'WRITTEN';
@@ -32,6 +32,7 @@ export const TestMode: React.FC<{ setId: string, onExit: () => void }> = ({ setI
   // Setup config
   const [questionCount, setQuestionCount] = useState(0);
   const [answerWith, setAnswerWith] = useState<AnswerWith>('Both');
+  const [groupQuestionTypes, setGroupQuestionTypes] = useState(false);
   const [enabledTypes, setEnabledTypes] = useState<Record<QuestionType, boolean>>({
     TF: true,
     MCQ: true,
@@ -63,7 +64,7 @@ export const TestMode: React.FC<{ setId: string, onExit: () => void }> = ({ setI
     
     if (activeTypes.length === 0) return;
 
-    const generated: Question[] = selectedCards.map((card, i) => {
+    let generated: Question[] = selectedCards.map((card, i) => {
       const type = activeTypes[i % activeTypes.length];
       
       // Determine what to use as prompt/answer based on "AnswerWith"
@@ -103,6 +104,15 @@ export const TestMode: React.FC<{ setId: string, onExit: () => void }> = ({ setI
 
       return q;
     });
+
+    if (groupQuestionTypes) {
+      // Order: TF -> MCQ -> WRITTEN
+      const typeOrder: Record<QuestionType, number> = { 'TF': 0, 'MCQ': 1, 'WRITTEN': 2 };
+      generated.sort((a, b) => typeOrder[a.type] - typeOrder[b.type]);
+    } else {
+      // Full shuffle
+      generated.sort(() => Math.random() - 0.5);
+    }
 
     setQuestions(generated);
     setState('running');
@@ -174,6 +184,19 @@ export const TestMode: React.FC<{ setId: string, onExit: () => void }> = ({ setI
                 </select>
                 <ChevronDown size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
              </div>
+          </div>
+
+          <div className="flex items-center justify-between pt-2">
+            <div className="flex items-center gap-3">
+               <Layers size={20} className="text-indigo-400" />
+               <span className="text-lg font-bold text-slate-100">Group question types</span>
+            </div>
+            <button 
+              onClick={() => setGroupQuestionTypes(!groupQuestionTypes)}
+              className={`relative w-14 h-8 rounded-full transition-colors ${groupQuestionTypes ? 'bg-indigo-600 shadow-[0_0_10px_rgba(79,70,229,0.5)]' : 'bg-slate-800'}`}
+            >
+              <div className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition-transform ${groupQuestionTypes ? 'translate-x-6' : 'translate-x-0'}`} />
+            </button>
           </div>
 
           <div className="h-px bg-slate-900" />
