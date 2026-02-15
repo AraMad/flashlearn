@@ -1,7 +1,9 @@
+
 import React, { useState } from 'react';
 import { Library } from './pages/Library';
 import { SetDetails } from './pages/SetDetails';
 import { SetEditor } from './pages/SetEditor';
+import { Settings } from './pages/Settings';
 import { ReviewMode } from './pages/StudyModes/ReviewMode';
 import { UnifiedLearnMode } from './pages/StudyModes/UnifiedLearnMode';
 import { MatchMode } from './pages/StudyModes/MatchMode';
@@ -9,7 +11,7 @@ import { Sidebar } from './components/Sidebar';
 import { LearnMode } from './types';
 import { Plus, Sparkles } from 'lucide-react';
 
-type Screen = 'library' | 'details' | 'editor' | 'study';
+type Screen = 'library' | 'details' | 'editor' | 'study' | 'settings';
 
 const App: React.FC = () => {
   const [currentScreen, setCurrentScreen] = useState<Screen>('library');
@@ -32,6 +34,11 @@ const App: React.FC = () => {
     setCurrentScreen('editor');
   };
 
+  const navigateToSettings = () => {
+    setCurrentScreen('settings');
+    setActiveSetId(null);
+  };
+
   const startStudy = (id: string, mode: LearnMode) => {
     setActiveSetId(id);
     setActiveStudyMode(mode);
@@ -40,7 +47,11 @@ const App: React.FC = () => {
 
   return (
     <div className="flex min-h-screen bg-slate-950 text-slate-50">
-      <Sidebar onNavigate={navigateToLibrary} onAddSet={() => navigateToEditor()} />
+      <Sidebar 
+        onNavigate={navigateToLibrary} 
+        onAddSet={() => navigateToEditor()} 
+        onNavigateSettings={navigateToSettings}
+      />
       
       <main className="flex-1 overflow-y-auto pb-24 md:pb-0">
         {/* Mobile Header */}
@@ -89,6 +100,10 @@ const App: React.FC = () => {
                mode={activeStudyMode} 
                onExit={() => navigateToDetails(activeSetId)} 
              />
+          )}
+
+          {currentScreen === 'settings' && (
+            <Settings />
           )}
         </div>
 

@@ -19,14 +19,18 @@ export const Library: React.FC<LibraryProps> = ({ onSelectSet, onEditSet }) => {
   }, []);
 
   const handleDelete = (e: React.MouseEvent, id: string) => {
+    e.preventDefault();
     e.stopPropagation();
     if (confirm('Delete this set forever?')) {
       DataStore.deleteSet(id);
-      setSets(DataStore.getSetSummaries());
+      // Immediately refresh the view
+      const freshSummaries = DataStore.getSetSummaries();
+      setSets(freshSummaries);
     }
   };
 
   const toggleFav = (e: React.MouseEvent, id: string) => {
+    e.preventDefault();
     e.stopPropagation();
     DataStore.toggleFavorite(id);
     setSets(DataStore.getSetSummaries());
@@ -110,7 +114,7 @@ export const Library: React.FC<LibraryProps> = ({ onSelectSet, onEditSet }) => {
                 </div>
                 <div className="flex gap-2">
                    <button 
-                    onClick={(e) => { e.stopPropagation(); onEditSet(set.id); }}
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEditSet(set.id); }}
                     className="p-2 text-slate-500 hover:text-indigo-400 transition-colors"
                   >
                     <Edit2 size={18} />

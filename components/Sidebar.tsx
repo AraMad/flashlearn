@@ -5,9 +5,10 @@ import { Library, PlusSquare, Settings, Sparkles } from 'lucide-react';
 interface SidebarProps {
   onNavigate: () => void;
   onAddSet: () => void;
+  onNavigateSettings: () => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ onNavigate, onAddSet }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ onNavigate, onAddSet, onNavigateSettings }) => {
   return (
     <aside className="hidden md:flex flex-col w-64 bg-slate-900 border-r border-slate-800 h-screen sticky top-0 p-6">
       <div className="flex items-center gap-2 mb-10">
@@ -35,7 +36,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ onNavigate, onAddSet }) => {
       </nav>
 
       <div className="pt-6 border-t border-slate-800">
-        <button className="w-full flex items-center gap-3 px-3 py-2 text-slate-500 hover:bg-slate-800 hover:text-slate-300 rounded-lg transition-colors group">
+        <button 
+          onClick={onNavigateSettings}
+          className="w-full flex items-center gap-3 px-3 py-2 text-slate-500 hover:bg-slate-800 hover:text-slate-300 rounded-lg transition-colors group"
+        >
           <Settings size={20} className="text-slate-600 group-hover:text-slate-400" />
           <span className="font-medium">Settings</span>
         </button>
