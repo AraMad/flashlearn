@@ -1,9 +1,8 @@
-
 name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [ "master" ] # If your branch is named 'master', change this to 'master'
+    branches: [ "master" ]
   workflow_dispatch:
 
 permissions:
@@ -15,21 +14,30 @@ concurrency:
   group: "pages"
   cancel-in-progress: false
 
+env:
+  npm_config_yes: true # Safeguard: Auto-answers "yes" to any npm prompts
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
+          # We are removing 'cache: npm' for one run to clear the "ghost" webpack files
+          
       - name: Install dependencies
-        run: npm install
+        run: |
+          rm -rf node_modules package-lock.json
+          npm install
+
       - name: Build
         run: npm run build
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
