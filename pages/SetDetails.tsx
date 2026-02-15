@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { DataStore } from '../store';
 import { SetSummary, LearnMode } from '../types';
-import { ChevronLeft, Play, LayoutGrid, Gamepad2, Edit3, BookOpen } from 'lucide-react';
+import { ChevronLeft, Play, LayoutGrid, Gamepad2, Edit3, BookOpen, ClipboardCheck } from 'lucide-react';
 
 interface SetDetailsProps {
   setId: string;
@@ -25,6 +25,7 @@ export const SetDetails: React.FC<SetDetailsProps> = ({ setId, onBack, onStartSt
     { id: 'LEARN', label: 'Learn', icon: <BookOpen size={24} />, desc: 'Master cards with mixed tasks.', minCards: 4, color: 'bg-indigo-600 hover:bg-indigo-700' },
     { id: 'REVIEW', label: 'Flashcards', icon: <LayoutGrid size={24} />, desc: 'Swipe to review terms.', minCards: 1, color: 'bg-emerald-600 hover:bg-emerald-700' },
     { id: 'MATCH', label: 'Match', icon: <Gamepad2 size={24} />, desc: 'Competitive matching game.', minCards: 3, color: 'bg-amber-600 hover:bg-amber-700' },
+    { id: 'TEST', label: 'Test', icon: <ClipboardCheck size={24} />, desc: 'Check your knowledge officially.', minCards: 4, color: 'bg-blue-600 hover:bg-blue-700' },
   ];
 
   return (

@@ -7,6 +7,7 @@ import { Settings } from './pages/Settings';
 import { ReviewMode } from './pages/StudyModes/ReviewMode';
 import { UnifiedLearnMode } from './pages/StudyModes/UnifiedLearnMode';
 import { MatchMode } from './pages/StudyModes/MatchMode';
+import { TestMode } from './pages/StudyModes/TestMode';
 import { Sidebar } from './components/Sidebar';
 import { LearnMode } from './types';
 import { DataStore } from './store';
@@ -139,6 +140,7 @@ const StudyContainer: React.FC<{ setId: string, mode: LearnMode, onExit: () => v
     case 'REVIEW': return <ReviewMode setId={setId} onExit={onExit} />;
     case 'LEARN': return <UnifiedLearnMode setId={setId} onExit={onExit} />;
     case 'MATCH': return <MatchMode setId={setId} onExit={onExit} />;
+    case 'TEST': return <TestMode setId={setId} onExit={onExit} />;
     case 'TF':
     case 'MCQ':
     case 'TYPE': return <UnifiedLearnMode setId={setId} onExit={onExit} />;
