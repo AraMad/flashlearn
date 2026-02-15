@@ -9,6 +9,13 @@ const STORAGE_KEYS = {
   STORAGE_VERSION: 'flashlearn_version'
 };
 
+// Legacy keys from potential previous versions to ensure no data is lost during redeploys
+const LEGACY_KEYS = {
+  SETS: 'flashlearn_sets',
+  CARDS: 'flashlearn_cards',
+  STUDY_STATES: 'flashlearn_study_states'
+};
+
 const CURRENT_VERSION = 1;
 const BACKUP_SIGNATURE = "FLASHLEARN_BACKUP_V1";
 
@@ -30,28 +37,49 @@ export class DataStore {
    */
   static initialize() {
     console.log("Initializing FlashLearn DataStore...");
-    const storedVersion = localStorage.getItem(STORAGE_KEYS.STORAGE_VERSION);
     
-    if (!storedVersion) {
-      // First time initialization on this device
-      localStorage.setItem(STORAGE_KEYS.STORAGE_VERSION, CURRENT_VERSION.toString());
-      
-      // Seed with a sample set if the library is empty
-      const existingSets = this.getSets();
-      if (existingSets.length === 0) {
-        console.log("Seeding sample data for new user session.");
-        this.addSet(
-          "Welcome to FlashLearn! 👋", 
-          "A sample set to get you started. Try the different study modes like Match or Learn!",
-          [
-            { front: "Flashcard", back: "A card bearing information on both sides, intended to be used as an aid in memorization." },
-            { front: "Persistence", back: "The quality of continuing in a course of action in spite of difficulty or opposition." },
-            { front: "Spaced Repetition", back: "An evidence-based learning technique that is usually performed with flashcards." },
-            { front: "PWA", back: "Progressive Web App - an app that works offline and can be installed on your home screen." }
-          ]
-        );
+    // 1. Check if we have current version data
+    const existingSets = this.getSets();
+    const storedVersion = localStorage.getItem(STORAGE_KEYS.STORAGE_VERSION);
+
+    // 2. If current version is empty, check for legacy data to migrate
+    if (existingSets.length === 0) {
+      const legacySetsStr = localStorage.getItem(LEGACY_KEYS.SETS);
+      if (legacySetsStr) {
+        console.log("Found legacy data. Migrating to v1...");
+        try {
+          const legacySets = JSON.parse(legacySetsStr);
+          const legacyCards = JSON.parse(localStorage.getItem(LEGACY_KEYS.CARDS) || '[]');
+          const legacyStates = JSON.parse(localStorage.getItem(LEGACY_KEYS.STUDY_STATES) || '[]');
+          
+          this.saveSets(legacySets);
+          this.saveCards(legacyCards);
+          this.saveStudyStates(legacyStates);
+          
+          localStorage.setItem(STORAGE_KEYS.STORAGE_VERSION, CURRENT_VERSION.toString());
+          console.log("Migration successful.");
+          return; // Skip seeding
+        } catch (e) {
+          console.error("Migration failed:", e);
+        }
       }
-    } else {
+    }
+
+    // 3. If still empty, seed only if it's truly the first time
+    if (!storedVersion && existingSets.length === 0) {
+      console.log("No data found. Seeding sample data for new user.");
+      localStorage.setItem(STORAGE_KEYS.STORAGE_VERSION, CURRENT_VERSION.toString());
+      this.addSet(
+        "Welcome to FlashLearn! 👋", 
+        "A sample set to get you started. Try the different study modes like Match or Learn!",
+        [
+          { front: "Flashcard", back: "A card bearing information on both sides, intended to be used as an aid in memorization." },
+          { front: "Persistence", back: "The quality of continuing in a course of action in spite of difficulty or opposition." },
+          { front: "Spaced Repetition", back: "An evidence-based learning technique that is usually performed with flashcards." },
+          { front: "PWA", back: "Progressive Web App - an app that works offline and can be installed on your home screen." }
+        ]
+      );
+    } else if (storedVersion) {
       const version = parseInt(storedVersion, 10);
       if (version < CURRENT_VERSION) {
         this.migrate(version, CURRENT_VERSION);
@@ -61,7 +89,6 @@ export class DataStore {
 
   private static migrate(from: number, to: number) {
     console.log(`Migrating storage from v${from} to v${to}...`);
-    // Logic for future schema updates goes here
     localStorage.setItem(STORAGE_KEYS.STORAGE_VERSION, to.toString());
   }
 
@@ -73,6 +100,15 @@ export class DataStore {
     } catch (e) {
       console.error(`Failed to parse storage key [${key}]:`, e);
       return defaultValue;
+    }
+  }
+
+  private static safeSave(key: string, value: any) {
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+    } catch (e) {
+      console.error(`Storage failed for key [${key}]. LocalStorage might be full:`, e);
+      alert("Warning: Your browser storage is full. Some data might not be saved.");
     }
   }
 
@@ -89,15 +125,15 @@ export class DataStore {
   }
 
   static saveSets(sets: SetEntity[]) {
-    localStorage.setItem(STORAGE_KEYS.SETS, JSON.stringify(sets));
+    this.safeSave(STORAGE_KEYS.SETS, sets);
   }
 
   static saveCards(cards: CardEntity[]) {
-    localStorage.setItem(STORAGE_KEYS.CARDS, JSON.stringify(cards));
+    this.safeSave(STORAGE_KEYS.CARDS, cards);
   }
 
   static saveStudyStates(states: StudyStateEntity[]) {
-    localStorage.setItem(STORAGE_KEYS.STUDY_STATES, JSON.stringify(states));
+    this.safeSave(STORAGE_KEYS.STUDY_STATES, states);
   }
 
   static getSetSummaries(): SetSummary[] {
@@ -255,10 +291,10 @@ export class DataStore {
     a.click();
     URL.revokeObjectURL(url);
 
-    localStorage.setItem(STORAGE_KEYS.BACKUP_INFO, JSON.stringify({
+    this.safeSave(STORAGE_KEYS.BACKUP_INFO, {
       timestamp: Date.now(),
       filename: filename
-    }));
+    });
   }
 
   static async importData(file: File): Promise<boolean> {
