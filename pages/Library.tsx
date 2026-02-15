@@ -1,21 +1,25 @@
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { DataStore } from '../store';
 import { SetSummary } from '../types';
-import { Search, Star, Clock, BookOpen, Trash2, Edit2, Tag } from 'lucide-react';
+import { Search, Star, Clock, BookOpen, Trash2, Edit2, Tag, Database, AlertCircle, ArrowRight } from 'lucide-react';
 
 interface LibraryProps {
   onSelectSet: (id: string) => void;
   onEditSet: (id: string) => void;
+  onNavigateSettings: () => void;
 }
 
-export const Library: React.FC<LibraryProps> = ({ onSelectSet, onEditSet }) => {
+export const Library: React.FC<LibraryProps> = ({ onSelectSet, onEditSet, onNavigateSettings }) => {
   const [sets, setSets] = useState<SetSummary[]>([]);
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<'all' | 'favorites'>('all');
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [showBackupReminder, setShowBackupReminder] = useState(false);
 
   useEffect(() => {
     setSets(DataStore.getSetSummaries());
+    setShowBackupReminder(DataStore.shouldShowBackupReminder());
   }, []);
 
   const allTags = useMemo(() => {
@@ -30,6 +34,7 @@ export const Library: React.FC<LibraryProps> = ({ onSelectSet, onEditSet }) => {
     if (confirm('Delete this set forever?')) {
       DataStore.deleteSet(id);
       setSets(DataStore.getSetSummaries());
+      setShowBackupReminder(DataStore.shouldShowBackupReminder());
     }
   };
 
@@ -38,6 +43,7 @@ export const Library: React.FC<LibraryProps> = ({ onSelectSet, onEditSet }) => {
     e.stopPropagation();
     DataStore.toggleFavorite(id);
     setSets(DataStore.getSetSummaries());
+    setShowBackupReminder(DataStore.shouldShowBackupReminder());
   };
 
   const filteredSets = sets
@@ -103,6 +109,29 @@ export const Library: React.FC<LibraryProps> = ({ onSelectSet, onEditSet }) => {
           </div>
         )}
       </div>
+
+      {showBackupReminder && (
+        <div 
+          onClick={onNavigateSettings}
+          className="group bg-gradient-to-r from-accent/10 to-transparent border border-accent/20 rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:border-accent/40 transition-all animate-in slide-in-from-top-4 duration-500"
+        >
+          <div className="flex items-center gap-4">
+            <div className="p-2 bg-accent/20 rounded-xl text-accent">
+              <Database size={20} />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-slate-100 flex items-center gap-2">
+                Time to back up your progress!
+                <AlertCircle size={14} className="text-accent animate-pulse" />
+              </p>
+              <p className="text-xs text-slate-500 mt-0.5">You have unsaved changes since your last backup (7+ days ago).</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 text-accent font-black text-[10px] uppercase tracking-widest group-hover:translate-x-1 transition-transform">
+            Secure now <ArrowRight size={14} />
+          </div>
+        </div>
+      )}
 
       {filteredSets.length === 0 ? (
         <div className="text-center py-20 bg-slate-900 rounded-2xl border-2 border-dashed border-slate-800">

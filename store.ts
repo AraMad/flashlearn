@@ -6,6 +6,7 @@ const STORAGE_KEYS = {
   CARDS: 'flashlearn_cards_v1',
   STUDY_STATES: 'flashlearn_study_states_v1',
   BACKUP_INFO: 'flashlearn_backup_info_v1',
+  LAST_MUTATION: 'flashlearn_last_mutation_v1',
   STORAGE_VERSION: 'flashlearn_version'
 };
 
@@ -66,6 +67,22 @@ export class DataStore {
     } catch (e) {
       alert("Warning: Your browser storage is full.");
     }
+  }
+
+  private static recordMutation() {
+    this.safeSave(STORAGE_KEYS.LAST_MUTATION, Date.now());
+  }
+
+  static shouldShowBackupReminder(): boolean {
+    const lastBackup = this.getBackupInfo()?.timestamp || 0;
+    const lastMutation = this.safeParse<number>(STORAGE_KEYS.LAST_MUTATION, 0);
+    
+    // No changes since last backup
+    if (lastMutation <= lastBackup) return false;
+    
+    // Check if it's been more than 7 days since last backup
+    const sevenDaysInMs = 7 * 24 * 60 * 60 * 1000;
+    return (Date.now() - lastBackup) > sevenDaysInMs;
   }
 
   static getSets(): SetEntity[] {
@@ -149,6 +166,7 @@ export class DataStore {
     this.saveSets([...this.getSets(), newSet]);
     this.saveCards([...this.getCards(), ...newCards]);
     this.saveStudyStates([...this.getStudyStates(), ...newStates]);
+    this.recordMutation();
     return setId;
   }
 
@@ -188,6 +206,7 @@ export class DataStore {
     this.saveSets(sets);
     this.saveCards([...otherCards, ...newCards]);
     this.saveStudyStates([...otherStates, ...newStates]);
+    this.recordMutation();
     return setId;
   }
 
@@ -198,6 +217,7 @@ export class DataStore {
       sets[idx].tags = tags;
       sets[idx].updatedAt = Date.now();
       this.saveSets(sets);
+      this.recordMutation();
     }
   }
 
@@ -218,6 +238,7 @@ export class DataStore {
 
     states[stateIndex] = state;
     this.saveStudyStates(states);
+    this.recordMutation();
   }
 
   static toggleFavorite(setId: string) {
@@ -226,6 +247,7 @@ export class DataStore {
     if (index !== -1) {
       sets[index].isFavorite = !sets[index].isFavorite;
       this.saveSets(sets);
+      this.recordMutation();
     }
   }
 
@@ -238,6 +260,7 @@ export class DataStore {
     this.saveSets(sets);
     this.saveCards(cards);
     this.saveStudyStates(states);
+    this.recordMutation();
   }
 
   static getBackupInfo(): { timestamp: number, filename: string } | null {
@@ -284,6 +307,11 @@ export class DataStore {
       this.saveSets(payload.data.sets);
       this.saveCards(payload.data.cards);
       this.saveStudyStates(payload.data.states);
+      // After import, we consider it "backed up" or at least synced
+      this.safeSave(STORAGE_KEYS.BACKUP_INFO, {
+        timestamp: Date.now(),
+        filename: 'Imported from file'
+      });
       return true;
     } catch (e) {
       return false;

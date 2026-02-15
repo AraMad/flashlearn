@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Library } from './pages/Library';
 import { SetDetails } from './pages/SetDetails';
@@ -91,7 +92,11 @@ const App: React.FC = () => {
 
         <div className={`max-w-5xl mx-auto p-4 md:p-8 ${isStudyMode ? 'pt-4' : ''}`}>
           {currentScreen === 'library' && (
-            <Library onSelectSet={navigateToDetails} onEditSet={navigateToEditor} />
+            <Library 
+              onSelectSet={navigateToDetails} 
+              onEditSet={navigateToEditor} 
+              onNavigateSettings={navigateToSettings}
+            />
           )}
           
           {currentScreen === 'details' && activeSetId && (
