@@ -9,13 +9,6 @@ const STORAGE_KEYS = {
   STORAGE_VERSION: 'flashlearn_version'
 };
 
-// Legacy keys from potential previous versions to ensure no data is lost during redeploys
-const LEGACY_KEYS = {
-  SETS: 'flashlearn_sets',
-  CARDS: 'flashlearn_cards',
-  STUDY_STATES: 'flashlearn_study_states'
-};
-
 const CURRENT_VERSION = 1;
 const BACKUP_SIGNATURE = "FLASHLEARN_BACKUP_V1";
 
@@ -31,43 +24,17 @@ export interface BackupPayload {
 }
 
 export class DataStore {
-  /**
-   * Initializes the store, handles migrations and ensures 
-   * data is persistent across app redeploys.
-   */
   static initialize() {
-    console.log("Initializing FlashLearn DataStore...");
-    
-    // 1. Check if we have current version data
     const existingSets = this.getSets();
     const storedVersion = localStorage.getItem(STORAGE_KEYS.STORAGE_VERSION);
 
-    // 2. If current version is empty, check for legacy data to migrate
-    if (existingSets.length === 0) {
-      const legacySetsStr = localStorage.getItem(LEGACY_KEYS.SETS);
-      if (legacySetsStr) {
-        console.log("Found legacy data. Migrating to v1...");
-        try {
-          const legacySets = JSON.parse(legacySetsStr);
-          const legacyCards = JSON.parse(localStorage.getItem(LEGACY_KEYS.CARDS) || '[]');
-          const legacyStates = JSON.parse(localStorage.getItem(LEGACY_KEYS.STUDY_STATES) || '[]');
-          
-          this.saveSets(legacySets);
-          this.saveCards(legacyCards);
-          this.saveStudyStates(legacyStates);
-          
-          localStorage.setItem(STORAGE_KEYS.STORAGE_VERSION, CURRENT_VERSION.toString());
-          console.log("Migration successful.");
-          return; // Skip seeding
-        } catch (e) {
-          console.error("Migration failed:", e);
-        }
-      }
+    // Initialize tags for existing sets if they don't have them
+    const setsWithTags = existingSets.map(s => ({ ...s, tags: s.tags || [] }));
+    if (JSON.stringify(existingSets) !== JSON.stringify(setsWithTags)) {
+      this.saveSets(setsWithTags);
     }
 
-    // 3. If still empty, seed only if it's truly the first time
     if (!storedVersion && existingSets.length === 0) {
-      console.log("No data found. Seeding sample data for new user.");
       localStorage.setItem(STORAGE_KEYS.STORAGE_VERSION, CURRENT_VERSION.toString());
       this.addSet(
         "Welcome to FlashLearn! 👋", 
@@ -77,19 +44,10 @@ export class DataStore {
           { front: "Persistence", back: "The quality of continuing in a course of action in spite of difficulty or opposition." },
           { front: "Spaced Repetition", back: "An evidence-based learning technique that is usually performed with flashcards." },
           { front: "PWA", back: "Progressive Web App - an app that works offline and can be installed on your home screen." }
-        ]
+        ],
+        ["Tutorial"]
       );
-    } else if (storedVersion) {
-      const version = parseInt(storedVersion, 10);
-      if (version < CURRENT_VERSION) {
-        this.migrate(version, CURRENT_VERSION);
-      }
     }
-  }
-
-  private static migrate(from: number, to: number) {
-    console.log(`Migrating storage from v${from} to v${to}...`);
-    localStorage.setItem(STORAGE_KEYS.STORAGE_VERSION, to.toString());
   }
 
   private static safeParse<T>(key: string, defaultValue: T): T {
@@ -98,7 +56,6 @@ export class DataStore {
       if (!data) return defaultValue;
       return JSON.parse(data) as T;
     } catch (e) {
-      console.error(`Failed to parse storage key [${key}]:`, e);
       return defaultValue;
     }
   }
@@ -107,13 +64,19 @@ export class DataStore {
     try {
       localStorage.setItem(key, JSON.stringify(value));
     } catch (e) {
-      console.error(`Storage failed for key [${key}]. LocalStorage might be full:`, e);
-      alert("Warning: Your browser storage is full. Some data might not be saved.");
+      alert("Warning: Your browser storage is full.");
     }
   }
 
   static getSets(): SetEntity[] {
-    return this.safeParse<SetEntity[]>(STORAGE_KEYS.SETS, []);
+    return this.safeParse<SetEntity[]>(STORAGE_KEYS.SETS, []).map(s => ({ ...s, tags: s.tags || [] }));
+  }
+
+  static getAllTags(): string[] {
+    const sets = this.getSets();
+    const tags = new Set<string>();
+    sets.forEach(s => s.tags?.forEach(t => tags.add(t)));
+    return Array.from(tags).sort();
   }
 
   static getCards(): CardEntity[] {
@@ -152,7 +115,7 @@ export class DataStore {
     });
   }
 
-  static addSet(title: string, description: string, cards: { front: string, back: string }[]) {
+  static addSet(title: string, description: string, cards: { front: string, back: string }[], tags: string[] = []) {
     const setId = crypto.randomUUID();
     const now = Date.now();
     
@@ -163,7 +126,8 @@ export class DataStore {
       createdAt: now,
       updatedAt: now,
       isFavorite: false,
-      isDownloaded: false
+      isDownloaded: false,
+      tags: tags
     };
 
     const newCards: CardEntity[] = cards.map((c, i) => ({
@@ -188,7 +152,7 @@ export class DataStore {
     return setId;
   }
 
-  static updateSet(setId: string, title: string, description: string, cards: { front: string, back: string }[]) {
+  static updateSet(setId: string, title: string, description: string, cards: { front: string, back: string }[], tags?: string[]) {
     const sets = this.getSets();
     const setIndex = sets.findIndex(s => s.id === setId);
     if (setIndex === -1) return setId;
@@ -198,7 +162,8 @@ export class DataStore {
       ...sets[setIndex],
       title,
       description,
-      updatedAt: now
+      updatedAt: now,
+      tags: tags !== undefined ? tags : sets[setIndex].tags
     };
 
     const otherCards = this.getCards().filter(c => c.setId !== setId);
@@ -224,6 +189,16 @@ export class DataStore {
     this.saveCards([...otherCards, ...newCards]);
     this.saveStudyStates([...otherStates, ...newStates]);
     return setId;
+  }
+
+  static updateSetTags(setId: string, tags: string[]) {
+    const sets = this.getSets();
+    const idx = sets.findIndex(s => s.id === setId);
+    if (idx !== -1) {
+      sets[idx].tags = tags;
+      sets[idx].updatedAt = Date.now();
+      this.saveSets(sets);
+    }
   }
 
   static updateStudyState(cardId: string, isCorrect: boolean) {
@@ -306,16 +281,11 @@ export class DataStore {
         throw new Error("Invalid backup file signature.");
       }
 
-      if (!payload.data || !Array.isArray(payload.data.sets)) {
-        throw new Error("Corrupted backup data.");
-      }
-
       this.saveSets(payload.data.sets);
       this.saveCards(payload.data.cards);
       this.saveStudyStates(payload.data.states);
       return true;
     } catch (e) {
-      console.error("Import failed", e);
       return false;
     }
   }

@@ -156,13 +156,13 @@ export const MatchMode: React.FC<{ setId: string, onExit: () => void }> = ({ set
   }
 
   return (
-    <div className="fixed inset-0 md:relative md:inset-auto h-screen md:h-[80vh] bg-slate-950 flex flex-col p-4 md:p-0 animate-in slide-in-from-bottom duration-300 overflow-hidden">
-      <div className="flex items-center justify-between shrink-0 mb-4">
+    <div className="fixed inset-0 md:relative md:inset-auto h-screen md:h-[80vh] bg-slate-950 flex flex-col p-2 sm:p-4 md:p-0 animate-in slide-in-from-bottom duration-300 overflow-hidden">
+      <div className="flex items-center justify-between shrink-0 mb-2 sm:mb-4">
         <button onClick={onExit} className="p-2 text-slate-500 hover:text-slate-100 transition-colors">
           <ChevronLeft size={24} />
         </button>
         <div className="flex items-center gap-4">
-           <div className="flex items-center gap-2 px-4 py-1.5 bg-slate-900 rounded-full border border-slate-800 text-slate-300 font-bold">
+           <div className="flex items-center gap-2 px-3 sm:px-4 py-1.5 bg-slate-900 rounded-full border border-slate-800 text-slate-300 font-bold text-sm sm:text-base">
              <Timer size={16} className="text-amber-500" />
              {seconds}s
            </div>
@@ -179,10 +179,9 @@ export const MatchMode: React.FC<{ setId: string, onExit: () => void }> = ({ set
       {/* 
           Grid optimized for viewport:
           Mobile: 3 columns, 4 rows (12 items)
-          Desktop: 4 columns, 3 rows (12 items)
-          Uses flex-1 and h-full with grid-rows to prevent any overflow.
+          Reduced padding (p-1.5) to allow larger font sizes.
       */}
-      <div className="flex-1 grid grid-cols-3 md:grid-cols-4 grid-rows-4 md:grid-rows-3 gap-2 md:gap-4 h-full pb-4">
+      <div className="flex-1 grid grid-cols-3 md:grid-cols-4 grid-rows-4 md:grid-rows-3 gap-1.5 sm:gap-3 md:gap-4 h-full pb-4">
         {tiles.map(tile => {
           const isSelected = selected?.id === tile.id;
           const isMismatched = mismatchedIds.includes(tile.id);
@@ -191,14 +190,14 @@ export const MatchMode: React.FC<{ setId: string, onExit: () => void }> = ({ set
             <button
               key={tile.id}
               onClick={() => handleTileClick(tile)}
-              className={`relative h-full w-full p-2 md:p-4 rounded-xl md:rounded-2xl transition-all transform flex items-center justify-center text-center shadow-sm border-2 overflow-hidden ${
+              className={`relative h-full w-full p-1.5 sm:p-3 md:p-4 rounded-xl md:rounded-2xl transition-all transform flex items-center justify-center text-center shadow-sm border-2 overflow-hidden ${
                 tile.isMatched ? 'opacity-0 scale-75 pointer-events-none' :
                 isMismatched ? 'bg-red-500 border-red-500 text-white animate-shake' :
                 isSelected ? 'bg-indigo-600 border-indigo-600 text-white scale-105 shadow-[0_0_20px_rgba(79,70,229,0.4)] z-10' :
                 'bg-slate-900 border-slate-800 text-slate-300 hover:border-indigo-500 hover:bg-slate-800 active:scale-95'
               }`}
             >
-              <span className="text-[10px] xs:text-xs sm:text-sm md:text-base font-bold leading-tight line-clamp-4 break-words">
+              <span className="text-xs xs:text-sm sm:text-base md:text-xl font-bold leading-tight line-clamp-4 break-words hyphens-auto">
                 {tile.text}
               </span>
             </button>

@@ -1,8 +1,8 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { DataStore } from '../store';
 import { SetSummary } from '../types';
-import { Search, Star, Clock, BookOpen, Trash2, Edit2 } from 'lucide-react';
+import { Search, Star, Clock, BookOpen, Trash2, Edit2, Tag } from 'lucide-react';
 
 interface LibraryProps {
   onSelectSet: (id: string) => void;
@@ -13,19 +13,24 @@ export const Library: React.FC<LibraryProps> = ({ onSelectSet, onEditSet }) => {
   const [sets, setSets] = useState<SetSummary[]>([]);
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<'all' | 'favorites'>('all');
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
 
   useEffect(() => {
     setSets(DataStore.getSetSummaries());
   }, []);
+
+  const allTags = useMemo(() => {
+    const tags = new Set<string>();
+    sets.forEach(s => s.tags?.forEach(t => tags.add(t)));
+    return Array.from(tags).sort();
+  }, [sets]);
 
   const handleDelete = (e: React.MouseEvent, id: string) => {
     e.preventDefault();
     e.stopPropagation();
     if (confirm('Delete this set forever?')) {
       DataStore.deleteSet(id);
-      // Immediately refresh the view
-      const freshSummaries = DataStore.getSetSummaries();
-      setSets(freshSummaries);
+      setSets(DataStore.getSetSummaries());
     }
   };
 
@@ -39,6 +44,7 @@ export const Library: React.FC<LibraryProps> = ({ onSelectSet, onEditSet }) => {
   const filteredSets = sets
     .filter(s => s.title.toLowerCase().includes(search.toLowerCase()))
     .filter(s => (filter === 'favorites' ? s.isFavorite : true))
+    .filter(s => (selectedTag ? s.tags?.includes(selectedTag) : true))
     .sort((a, b) => b.updatedAt - a.updatedAt);
 
   return (
@@ -61,19 +67,42 @@ export const Library: React.FC<LibraryProps> = ({ onSelectSet, onEditSet }) => {
         </div>
       </div>
 
-      <div className="flex gap-2 p-1 bg-slate-900 rounded-lg w-fit border border-slate-800">
-        <button 
-          onClick={() => setFilter('all')}
-          className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${filter === 'all' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}
-        >
-          All Sets
-        </button>
-        <button 
-          onClick={() => setFilter('favorites')}
-          className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${filter === 'favorites' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}
-        >
-          Favorites
-        </button>
+      <div className="space-y-4">
+        <div className="flex gap-2 p-1 bg-slate-900 rounded-lg w-fit border border-slate-800">
+          <button 
+            onClick={() => setFilter('all')}
+            className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${filter === 'all' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}
+          >
+            All Sets
+          </button>
+          <button 
+            onClick={() => setFilter('favorites')}
+            className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${filter === 'favorites' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}
+          >
+            Favorites
+          </button>
+        </div>
+
+        {allTags.length > 0 && (
+          <div className="flex items-center gap-3 overflow-x-auto pb-2 no-scrollbar">
+            <button
+              onClick={() => setSelectedTag(null)}
+              className={`whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-bold border transition-all ${!selectedTag ? 'bg-indigo-600/20 border-indigo-500 text-indigo-400' : 'bg-slate-900 border-slate-800 text-slate-500'}`}
+            >
+              All Tags
+            </button>
+            {allTags.map(tag => (
+              <button
+                key={tag}
+                onClick={() => setSelectedTag(selectedTag === tag ? null : tag)}
+                className={`whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-bold border transition-all flex items-center gap-2 ${selectedTag === tag ? 'bg-indigo-600/20 border-indigo-500 text-indigo-400 shadow-[0_0_15px_rgba(99,102,241,0.2)]' : 'bg-slate-900 border-slate-800 text-slate-500 hover:border-slate-700'}`}
+              >
+                <Tag size={12} />
+                {tag}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {filteredSets.length === 0 ? (
@@ -82,7 +111,17 @@ export const Library: React.FC<LibraryProps> = ({ onSelectSet, onEditSet }) => {
             <BookOpen size={48} className="text-slate-700" />
           </div>
           <h3 className="text-lg font-semibold text-slate-200">No sets found</h3>
-          <p className="text-slate-500">Create your first flashcard set to start learning!</p>
+          <p className="text-slate-500">
+            {search || selectedTag ? 'Try clearing your search or tag filters.' : 'Create your first flashcard set to start learning!'}
+          </p>
+          {(search || selectedTag) && (
+            <button 
+                onClick={() => { setSearch(''); setSelectedTag(null); }}
+                className="mt-4 text-indigo-400 font-bold hover:underline"
+            >
+                Clear all filters
+            </button>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -90,7 +129,7 @@ export const Library: React.FC<LibraryProps> = ({ onSelectSet, onEditSet }) => {
             <div 
               key={set.id}
               onClick={() => onSelectSet(set.id)}
-              className="group bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-800 hover:border-indigo-500 hover:shadow-indigo-900/10 hover:shadow-md transition-all cursor-pointer relative"
+              className="group bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-800 hover:border-indigo-500 hover:shadow-indigo-900/10 hover:shadow-md transition-all cursor-pointer relative flex flex-col"
             >
               <div className="flex justify-between items-start mb-4">
                 <div className="flex items-center gap-2 text-xs font-semibold text-indigo-400 uppercase tracking-wider">
@@ -106,7 +145,20 @@ export const Library: React.FC<LibraryProps> = ({ onSelectSet, onEditSet }) => {
               </div>
 
               <h3 className="text-xl font-bold text-slate-100 mb-2 group-hover:text-indigo-400 transition-colors">{set.title}</h3>
-              <p className="text-slate-400 text-sm line-clamp-2 mb-6">{set.description || 'No description provided.'}</p>
+              <p className="text-slate-400 text-sm line-clamp-2 mb-4">{set.description || 'No description provided.'}</p>
+
+              {set.tags && set.tags.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mb-6">
+                    {set.tags.slice(0, 3).map(tag => (
+                        <span key={tag} className="px-2 py-0.5 bg-slate-950 border border-slate-800 text-[10px] font-bold text-slate-500 rounded-md">
+                            {tag}
+                        </span>
+                    ))}
+                    {set.tags.length > 3 && (
+                        <span className="text-[10px] text-slate-700 font-black">+ {set.tags.length - 3}</span>
+                    )}
+                </div>
+              )}
 
               <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-800">
                 <div className="flex items-center gap-2 text-sm text-slate-400">
@@ -140,6 +192,10 @@ export const Library: React.FC<LibraryProps> = ({ onSelectSet, onEditSet }) => {
           ))}
         </div>
       )}
+      <style>{`
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      `}</style>
     </div>
   );
 };

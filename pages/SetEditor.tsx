@@ -1,8 +1,8 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { DataStore } from '../store';
 import { CardEntity } from '../types';
-import { Plus, Trash2, Save, X, FileText, LayoutList } from 'lucide-react';
+import { Plus, Trash2, Save, X, FileText, LayoutList, Tag } from 'lucide-react';
 
 interface SetEditorProps {
   setId?: string;
@@ -14,16 +14,21 @@ export const SetEditor: React.FC<SetEditorProps> = ({ setId, onCancel, onSave })
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [cards, setCards] = useState<{ front: string, back: string }[]>([{ front: '', back: '' }]);
+  const [tags, setTags] = useState<string[]>([]);
+  const [tagInput, setTagInput] = useState('');
+  const [allExistingTags, setAllExistingTags] = useState<string[]>([]);
   const [isBulkImport, setIsBulkImport] = useState(false);
   const [bulkText, setBulkText] = useState('');
 
   useEffect(() => {
+    setAllExistingTags(DataStore.getAllTags());
     if (setId) {
       const allSets = DataStore.getSets();
       const set = allSets.find(s => s.id === setId);
       if (set) {
         setTitle(set.title);
         setDescription(set.description || '');
+        setTags(set.tags || []);
         const existingCards = DataStore.getCards().filter(c => c.setId === setId).sort((a, b) => a.orderIndex - b.orderIndex);
         const mapped = existingCards.map(c => ({ front: c.front, back: c.back }));
         setCards(mapped.length > 0 ? mapped : [{ front: '', back: '' }]);
@@ -45,6 +50,26 @@ export const SetEditor: React.FC<SetEditorProps> = ({ setId, onCancel, onSave })
     }
   };
 
+  const handleAddTag = (tagToAdd: string) => {
+    const tag = tagToAdd.trim();
+    if (tag && !tags.includes(tag)) {
+        setTags([...tags, tag]);
+        setTagInput('');
+    }
+  };
+
+  const removeTag = (tag: string) => {
+    setTags(tags.filter(t => t !== tag));
+  };
+
+  const tagSuggestions = useMemo(() => {
+    if (!tagInput.trim()) return [];
+    return allExistingTags.filter(t => 
+      t.toLowerCase().includes(tagInput.toLowerCase()) && 
+      !tags.includes(t)
+    ).slice(0, 5);
+  }, [tagInput, allExistingTags, tags]);
+
   const handleSave = () => {
     if (!title.trim()) return;
     const validCards = cards.filter(c => c.front.trim() && c.back.trim());
@@ -52,11 +77,11 @@ export const SetEditor: React.FC<SetEditorProps> = ({ setId, onCancel, onSave })
 
     let finalId = setId;
     if (setId) {
-        finalId = DataStore.updateSet(setId, title, description, validCards);
+        finalId = DataStore.updateSet(setId, title, description, validCards, tags);
     } else {
-        finalId = DataStore.addSet(title, description, validCards);
+        finalId = DataStore.addSet(title, description, validCards, tags);
     }
-    onSave(finalId);
+    onSave(finalId!);
   };
 
   const handleBulkImport = () => {
@@ -132,6 +157,51 @@ export const SetEditor: React.FC<SetEditorProps> = ({ setId, onCancel, onSave })
             value={description}
             onChange={(e) => setDescription(e.target.value)}
           />
+        </div>
+        
+        <div className="space-y-3">
+          <label className="text-sm font-bold text-slate-400">Tags (Optional)</label>
+          <div className="flex flex-wrap gap-2 mb-2">
+            {tags.map(tag => (
+              <span key={tag} className="flex items-center gap-2 px-3 py-1 bg-slate-950 border border-slate-800 text-indigo-400 rounded-full text-xs font-bold">
+                <Tag size={12} />
+                {tag}
+                <button onClick={() => removeTag(tag)} className="text-slate-600 hover:text-red-400"><X size={12} /></button>
+              </span>
+            ))}
+          </div>
+          <div className="relative">
+            <form onSubmit={(e) => { e.preventDefault(); handleAddTag(tagInput); }} className="flex gap-2">
+              <input 
+                type="text"
+                placeholder="Add a tag..."
+                className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-slate-100 outline-none focus:border-indigo-500 transition-all"
+                value={tagInput}
+                onChange={(e) => setTagInput(e.target.value)}
+              />
+              <button 
+                type="button"
+                onClick={() => handleAddTag(tagInput)}
+                className="px-4 py-2 bg-slate-800 text-slate-300 rounded-xl text-sm font-bold hover:bg-slate-700"
+              >
+                Add
+              </button>
+            </form>
+            {tagSuggestions.length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-2 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2">
+                {tagSuggestions.map(suggestion => (
+                  <button
+                    key={suggestion}
+                    type="button"
+                    onClick={() => handleAddTag(suggestion)}
+                    className="w-full px-4 py-3 text-left text-sm font-bold text-slate-400 hover:bg-indigo-600 hover:text-white transition-colors border-b border-slate-800 last:border-0"
+                  >
+                    {suggestion}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

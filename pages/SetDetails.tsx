@@ -1,8 +1,8 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { DataStore } from '../store';
 import { SetSummary, LearnMode } from '../types';
-import { ChevronLeft, Play, LayoutGrid, Gamepad2, Edit3, BookOpen, ClipboardCheck } from 'lucide-react';
+import { ChevronLeft, Play, LayoutGrid, Gamepad2, Edit3, BookOpen, ClipboardCheck, Tag as TagIcon, Plus, X } from 'lucide-react';
 
 interface SetDetailsProps {
   setId: string;
@@ -13,11 +13,53 @@ interface SetDetailsProps {
 
 export const SetDetails: React.FC<SetDetailsProps> = ({ setId, onBack, onStartStudy, onEdit }) => {
   const [set, setSet] = useState<SetSummary | null>(null);
+  const [newTag, setNewTag] = useState('');
+  const [isAddingTag, setIsAddingTag] = useState(false);
+  const [allExistingTags, setAllExistingTags] = useState<string[]>([]);
 
   useEffect(() => {
+    refreshSet();
+    setAllExistingTags(DataStore.getAllTags());
+  }, [setId]);
+
+  const refreshSet = () => {
     const summary = DataStore.getSetSummaries().find(s => s.id === setId);
     if (summary) setSet(summary);
-  }, [setId]);
+  };
+
+  const handleAddTag = (tagToAdd: string) => {
+    if (!tagToAdd.trim() || !set) return;
+    
+    const tag = tagToAdd.trim();
+    if (set.tags.includes(tag)) {
+        setNewTag('');
+        setIsAddingTag(false);
+        return;
+    }
+
+    const updatedTags = [...set.tags, tag];
+    DataStore.updateSetTags(setId, updatedTags);
+    setNewTag('');
+    setIsAddingTag(false);
+    refreshSet();
+    // Refresh global tags list
+    setAllExistingTags(DataStore.getAllTags());
+  };
+
+  const removeTag = (tag: string) => {
+    if (!set) return;
+    const updatedTags = set.tags.filter(t => t !== tag);
+    DataStore.updateSetTags(setId, updatedTags);
+    refreshSet();
+  };
+
+  const tagSuggestions = useMemo(() => {
+    if (!newTag.trim()) return [];
+    return allExistingTags.filter(t => 
+      t.toLowerCase().includes(newTag.toLowerCase()) && 
+      !set?.tags.includes(t)
+    ).slice(0, 5);
+  }, [newTag, allExistingTags, set]);
 
   if (!set) return null;
 
@@ -43,7 +85,7 @@ export const SetDetails: React.FC<SetDetailsProps> = ({ setId, onBack, onStartSt
           className="ml-auto flex items-center gap-2 px-4 py-2 text-indigo-400 font-semibold hover:bg-indigo-950/30 rounded-xl transition-all border border-transparent hover:border-indigo-800"
         >
           <Edit3 size={20} />
-          <span>Edit Set</span>
+          <span className="hidden sm:inline">Edit Set</span>
         </button>
       </div>
 
@@ -93,6 +135,68 @@ export const SetDetails: React.FC<SetDetailsProps> = ({ setId, onBack, onStartSt
 
         <div className="space-y-6">
           <div className="bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-800">
+             <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-4">Tags</h3>
+             <div className="flex flex-wrap gap-2 mb-4">
+                {set.tags?.map(tag => (
+                  <span key={tag} className="group/tag flex items-center gap-2 px-3 py-1 bg-slate-950 border border-slate-800 text-slate-300 rounded-full text-xs font-bold transition-all hover:border-indigo-500/50">
+                    <TagIcon size={12} className="text-indigo-500" />
+                    {tag}
+                    <button 
+                      onClick={() => removeTag(tag)}
+                      className="text-slate-600 hover:text-red-400 opacity-0 group-hover/tag:opacity-100 transition-all"
+                    >
+                      <X size={12} />
+                    </button>
+                  </span>
+                ))}
+                
+                <div className="relative flex-1 min-w-[120px]">
+                  {isAddingTag ? (
+                    <div className="relative">
+                      <form onSubmit={(e) => { e.preventDefault(); handleAddTag(newTag); }}>
+                        <input 
+                          autoFocus
+                          type="text"
+                          className="w-full bg-slate-950 border border-indigo-600 rounded-full px-3 py-1 text-xs font-bold text-slate-100 outline-none"
+                          placeholder="Tag name..."
+                          value={newTag}
+                          onChange={(e) => setNewTag(e.target.value)}
+                          onBlur={() => {
+                            // Delay blur slightly to allow clicking suggestions
+                            setTimeout(() => {
+                                if (!newTag) setIsAddingTag(false);
+                            }, 200);
+                          }}
+                        />
+                      </form>
+                      {tagSuggestions.length > 0 && (
+                        <div className="absolute top-full left-0 right-0 mt-2 bg-slate-900 border border-slate-800 rounded-xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-1">
+                           {tagSuggestions.map(suggestion => (
+                             <button
+                               key={suggestion}
+                               onClick={() => handleAddTag(suggestion)}
+                               className="w-full px-3 py-2 text-left text-xs font-bold text-slate-400 hover:bg-indigo-600 hover:text-white transition-colors border-b border-slate-800 last:border-0"
+                             >
+                               {suggestion}
+                             </button>
+                           ))}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <button 
+                      onClick={() => setIsAddingTag(true)}
+                      className="flex items-center gap-1.5 px-3 py-1 bg-slate-800 text-slate-400 rounded-full text-xs font-bold hover:bg-slate-700 hover:text-slate-200 transition-all"
+                    >
+                      <Plus size={12} />
+                      Add Tag
+                    </button>
+                  )}
+                </div>
+             </div>
+
+             <div className="h-px bg-slate-800 my-6" />
+
              <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-4">About this set</h3>
              <p className="text-slate-400 leading-relaxed italic">
                {set.description || 'No description provided.'}

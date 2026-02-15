@@ -12,6 +12,7 @@ export interface SetEntity {
   updatedAt: number;
   isFavorite: boolean;
   isDownloaded: boolean;
+  tags: string[];
 }
 
 export interface CardEntity {
