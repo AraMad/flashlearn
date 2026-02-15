@@ -2,12 +2,14 @@
 import { SetEntity, CardEntity, StudyStateEntity, StudyStatus, SetSummary } from './types';
 
 const STORAGE_KEYS = {
-  SETS: 'flashlearn_sets',
-  CARDS: 'flashlearn_cards',
-  STUDY_STATES: 'flashlearn_study_states',
-  BACKUP_INFO: 'flashlearn_backup_info'
+  SETS: 'flashlearn_sets_v1',
+  CARDS: 'flashlearn_cards_v1',
+  STUDY_STATES: 'flashlearn_study_states_v1',
+  BACKUP_INFO: 'flashlearn_backup_info_v1',
+  STORAGE_VERSION: 'flashlearn_version'
 };
 
+const CURRENT_VERSION = 1;
 const BACKUP_SIGNATURE = "FLASHLEARN_BACKUP_V1";
 
 export interface BackupPayload {
@@ -22,19 +24,68 @@ export interface BackupPayload {
 }
 
 export class DataStore {
+  /**
+   * Initializes the store, handles migrations and ensures 
+   * data is persistent across app redeploys.
+   */
+  static initialize() {
+    console.log("Initializing FlashLearn DataStore...");
+    const storedVersion = localStorage.getItem(STORAGE_KEYS.STORAGE_VERSION);
+    
+    if (!storedVersion) {
+      // First time initialization on this device
+      localStorage.setItem(STORAGE_KEYS.STORAGE_VERSION, CURRENT_VERSION.toString());
+      
+      // Seed with a sample set if the library is empty
+      const existingSets = this.getSets();
+      if (existingSets.length === 0) {
+        console.log("Seeding sample data for new user session.");
+        this.addSet(
+          "Welcome to FlashLearn! 👋", 
+          "A sample set to get you started. Try the different study modes like Match or Learn!",
+          [
+            { front: "Flashcard", back: "A card bearing information on both sides, intended to be used as an aid in memorization." },
+            { front: "Persistence", back: "The quality of continuing in a course of action in spite of difficulty or opposition." },
+            { front: "Spaced Repetition", back: "An evidence-based learning technique that is usually performed with flashcards." },
+            { front: "PWA", back: "Progressive Web App - an app that works offline and can be installed on your home screen." }
+          ]
+        );
+      }
+    } else {
+      const version = parseInt(storedVersion, 10);
+      if (version < CURRENT_VERSION) {
+        this.migrate(version, CURRENT_VERSION);
+      }
+    }
+  }
+
+  private static migrate(from: number, to: number) {
+    console.log(`Migrating storage from v${from} to v${to}...`);
+    // Logic for future schema updates goes here
+    localStorage.setItem(STORAGE_KEYS.STORAGE_VERSION, to.toString());
+  }
+
+  private static safeParse<T>(key: string, defaultValue: T): T {
+    try {
+      const data = localStorage.getItem(key);
+      if (!data) return defaultValue;
+      return JSON.parse(data) as T;
+    } catch (e) {
+      console.error(`Failed to parse storage key [${key}]:`, e);
+      return defaultValue;
+    }
+  }
+
   static getSets(): SetEntity[] {
-    const data = localStorage.getItem(STORAGE_KEYS.SETS);
-    return data ? JSON.parse(data) : [];
+    return this.safeParse<SetEntity[]>(STORAGE_KEYS.SETS, []);
   }
 
   static getCards(): CardEntity[] {
-    const data = localStorage.getItem(STORAGE_KEYS.CARDS);
-    return data ? JSON.parse(data) : [];
+    return this.safeParse<CardEntity[]>(STORAGE_KEYS.CARDS, []);
   }
 
   static getStudyStates(): StudyStateEntity[] {
-    const data = localStorage.getItem(STORAGE_KEYS.STUDY_STATES);
-    return data ? JSON.parse(data) : [];
+    return this.safeParse<StudyStateEntity[]>(STORAGE_KEYS.STUDY_STATES, []);
   }
 
   static saveSets(sets: SetEntity[]) {
@@ -114,7 +165,6 @@ export class DataStore {
       updatedAt: now
     };
 
-    // Replace cards and states for this set
     const otherCards = this.getCards().filter(c => c.setId !== setId);
     const otherStates = this.getStudyStates().filter(s => s.setId !== setId);
 
@@ -179,10 +229,8 @@ export class DataStore {
     this.saveStudyStates(states);
   }
 
-  // Backup Methods
   static getBackupInfo(): { timestamp: number, filename: string } | null {
-    const data = localStorage.getItem(STORAGE_KEYS.BACKUP_INFO);
-    return data ? JSON.parse(data) : null;
+    return this.safeParse<{ timestamp: number, filename: string } | null>(STORAGE_KEYS.BACKUP_INFO, null);
   }
 
   static exportData() {
