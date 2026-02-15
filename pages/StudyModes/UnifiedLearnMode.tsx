@@ -86,15 +86,15 @@ export const UnifiedLearnMode: React.FC<{ setId: string, onExit: () => void }> =
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-10 animate-in zoom-in">
         <div className="relative">
-            <div className="bg-indigo-600/20 p-8 rounded-full border border-indigo-500/30 animate-pulse">
-                <Sparkles size={64} className="text-indigo-400" />
+            <div className="bg-amber-500/20 p-8 rounded-full border border-amber-500/30 animate-pulse">
+                <Sparkles size={64} className="text-amber-500" />
             </div>
         </div>
         <div>
           <h2 className="text-4xl font-black text-slate-100">Round Complete!</h2>
           <p className="text-slate-400 mt-2">You're making great progress.</p>
         </div>
-        <div className="text-7xl font-black text-indigo-400 drop-shadow-[0_0_15px_rgba(129,140,248,0.3)]">
+        <div className="text-7xl font-black text-amber-500 drop-shadow-[0_0_15px_rgba(251,198,4,0.3)]">
             {Math.round((score / tasks.length) * 100)}%
         </div>
         <div className="text-slate-500 font-bold uppercase tracking-widest">
@@ -102,7 +102,7 @@ export const UnifiedLearnMode: React.FC<{ setId: string, onExit: () => void }> =
         </div>
         <button 
           onClick={onExit} 
-          className="px-16 py-4 bg-indigo-600 text-white font-bold rounded-2xl hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-900/30 active:scale-95"
+          className="px-16 py-4 bg-amber-500 text-slate-950 font-bold rounded-2xl hover:bg-amber-600 transition-all shadow-xl shadow-amber-900/30 active:scale-95"
         >
           Finish
         </button>
@@ -118,7 +118,7 @@ export const UnifiedLearnMode: React.FC<{ setId: string, onExit: () => void }> =
       <div className="flex items-center justify-between">
         <button onClick={onExit} className="p-2 text-slate-500 hover:text-slate-100"><ChevronLeft size={24} /></button>
         <div className="flex flex-col items-center">
-            <div className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.3em] mb-1">
+            <div className="text-[10px] font-black text-amber-500 uppercase tracking-[0.3em] mb-1">
                 {current.type === 'TF' ? 'True or False' : current.type === 'MCQ' ? 'Multiple Choice' : 'Write the answer'}
             </div>
             <div className="text-xs font-bold text-slate-500">Step {currentIndex + 1} of {tasks.length}</div>
@@ -127,7 +127,7 @@ export const UnifiedLearnMode: React.FC<{ setId: string, onExit: () => void }> =
       </div>
 
       <div className="w-full h-1 bg-slate-900 rounded-full border border-slate-800">
-          <div className="h-full bg-indigo-500 transition-all duration-500" style={{ width: `${(currentIndex / tasks.length) * 100}%` }} />
+          <div className="h-full bg-amber-500 transition-all duration-500" style={{ width: `${(currentIndex / tasks.length) * 100}%` }} />
       </div>
 
       <div className="bg-slate-900 p-8 md:p-12 rounded-3xl border border-slate-800 shadow-2xl relative overflow-hidden min-h-[300px] flex flex-col items-center justify-center text-center">
@@ -165,7 +165,7 @@ export const UnifiedLearnMode: React.FC<{ setId: string, onExit: () => void }> =
       {current.type === 'MCQ' && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {current.question.options.map((opt: any) => {
-            let style = "bg-slate-900 border-slate-800 text-slate-300 hover:border-indigo-500";
+            let style = "bg-slate-900 border-slate-800 text-slate-300 hover:border-amber-500";
             if (selectedId) {
                 if (opt.isCorrect) style = "bg-emerald-600 border-emerald-600 text-white";
                 else if (selectedId === opt.id) style = "bg-red-600 border-red-600 text-white";
@@ -196,14 +196,14 @@ export const UnifiedLearnMode: React.FC<{ setId: string, onExit: () => void }> =
               className={`w-full text-xl p-6 bg-slate-900 border-2 rounded-2xl outline-none transition-all placeholder:text-slate-700 ${
                 feedback === 'correct' ? 'border-emerald-500 text-emerald-400 bg-emerald-950/20' :
                 feedback === 'wrong' ? 'border-red-500 text-red-400 bg-red-950/20' :
-                'border-slate-800 focus:border-indigo-600 text-slate-100'
+                'border-slate-800 focus:border-amber-500 text-slate-100'
               }`}
               placeholder="Type the definition..."
               value={input}
               onChange={(e) => setInput(e.target.value)}
             />
             {!feedback && (
-              <button type="submit" className="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-all">
+              <button type="submit" className="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-amber-500 text-slate-950 rounded-xl hover:bg-amber-600 transition-all">
                 <ArrowRight size={20} />
               </button>
             )}

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { DataStore, BackupPayload } from '../store';
 import { Download, Upload, ShieldCheck, Database, Calendar, FileJson, AlertCircle, Loader2, ChevronLeft, Shield } from 'lucide-react';
@@ -150,7 +149,7 @@ export const Settings: React.FC<SettingsProps> = ({ onBack }) => {
           <section className="space-y-4">
             <h3 className="text-xl font-bold text-slate-100">Contact Us</h3>
             <p>If you have any questions about this Privacy Policy, You can contact us:</p>
-            <p>By email: <span className="text-indigo-400 font-bold">hello@starksoft.online</span></p>
+            <p>By email: <span className="text-accent font-bold">hello@starksoft.online</span></p>
           </section>
         </div>
       </div>
@@ -178,21 +177,21 @@ export const Settings: React.FC<SettingsProps> = ({ onBack }) => {
         <section className="bg-slate-900 p-8 rounded-2xl border border-slate-800 space-y-6 relative overflow-hidden">
           {isImporting && (
             <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm z-20 flex flex-col items-center justify-center p-8 text-center animate-in fade-in">
-              <Loader2 size={48} className="text-indigo-500 animate-spin mb-4" />
+              <Loader2 size={48} className="text-accent animate-spin mb-4" />
               <h4 className="text-xl font-bold text-slate-100 mb-2">Restoring Your Data</h4>
               <p className="text-sm text-slate-400 mb-6">Validating backup and rebuilding your library...</p>
               <div className="w-full max-w-xs h-2 bg-slate-800 rounded-full overflow-hidden border border-slate-700">
                 <div 
-                  className="h-full bg-indigo-500 transition-all duration-300 shadow-[0_0_10px_rgba(99,102,241,0.5)]" 
+                  className="h-full bg-accent transition-all duration-300 shadow-[0_0_10px_rgba(251,198,4,0.3)]" 
                   style={{ width: `${importProgress}%` }}
                 />
               </div>
-              <p className="mt-2 text-[10px] font-black uppercase tracking-widest text-indigo-400">{importProgress}%</p>
+              <p className="mt-2 text-[10px] font-black uppercase tracking-widest text-accent">{importProgress}%</p>
             </div>
           )}
 
           <div className="flex items-center gap-3">
-            <div className="bg-indigo-500/10 p-2.5 rounded-xl text-indigo-400">
+            <div className="bg-accent-light p-2.5 rounded-xl text-accent">
               <Database size={24} />
             </div>
             <div>
@@ -210,7 +209,7 @@ export const Settings: React.FC<SettingsProps> = ({ onBack }) => {
               <button 
                 onClick={handleExport}
                 disabled={isImporting}
-                className="flex-1 flex items-center justify-center gap-3 px-6 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-all active:scale-95 shadow-lg shadow-indigo-900/20 disabled:opacity-50"
+                className="flex-1 flex items-center justify-center gap-3 px-6 py-3 bg-accent text-slate-950 font-bold rounded-xl hover:bg-accent-hover transition-all active:scale-95 shadow-lg shadow-accent/20 disabled:opacity-50"
               >
                 <Download size={20} />
                 Export Data
@@ -268,7 +267,7 @@ export const Settings: React.FC<SettingsProps> = ({ onBack }) => {
             {backupInfo ? (
               <div className="space-y-3">
                 <div className="flex items-center gap-3 text-sm">
-                  <FileJson size={16} className="text-indigo-400" />
+                  <FileJson size={16} className="text-accent" />
                   <span className="text-slate-300 font-medium truncate">{backupInfo.filename}</span>
                 </div>
                 <div className="flex items-center gap-3 text-sm">
@@ -299,7 +298,7 @@ export const Settings: React.FC<SettingsProps> = ({ onBack }) => {
 
               <button 
                 onClick={() => setShowPrivacy(true)}
-                className="text-xs text-slate-500 hover:text-indigo-400 underline transition-colors"
+                className="text-xs text-slate-500 hover:text-accent underline transition-colors"
               >
                 Privacy Policy
               </button>

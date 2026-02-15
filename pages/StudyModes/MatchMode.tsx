@@ -112,11 +112,11 @@ export const MatchMode: React.FC<{ setId: string, onExit: () => void }> = ({ set
     return (
       <div className="flex flex-col items-center justify-center min-h-[70vh] text-center space-y-8 animate-in zoom-in">
         <div className="relative">
-          <div className="bg-amber-600/20 p-8 rounded-full text-amber-500 border border-amber-500/30 mb-4 animate-bounce">
+          <div className="bg-amber-500/20 p-8 rounded-full text-amber-500 border border-amber-500/30 mb-4 animate-bounce">
              <Trophy size={64} />
           </div>
           {bestTime === seconds && (
-            <div className="absolute -top-2 -right-2 bg-emerald-500 text-white text-[10px] font-black px-2 py-1 rounded-md rotate-12 shadow-lg">NEW BEST!</div>
+            <div className="absolute -top-2 -right-2 bg-amber-500 text-slate-950 text-[10px] font-black px-2 py-1 rounded-md rotate-12 shadow-lg">NEW BEST!</div>
           )}
         </div>
         
@@ -124,11 +124,11 @@ export const MatchMode: React.FC<{ setId: string, onExit: () => void }> = ({ set
         
         <div className="flex gap-8 md:gap-12">
            <div className="text-center">
-             <div className="text-4xl md:text-5xl font-black text-indigo-400">{seconds}s</div>
+             <div className="text-4xl md:text-5xl font-black text-amber-500">{seconds}s</div>
              <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Time</div>
            </div>
            <div className="text-center">
-             <div className="text-4xl md:text-5xl font-black text-emerald-500">{bestTime}s</div>
+             <div className="text-4xl md:text-5xl font-black text-amber-300">{bestTime}s</div>
              <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Best</div>
            </div>
            <div className="text-center">
@@ -146,7 +146,7 @@ export const MatchMode: React.FC<{ setId: string, onExit: () => void }> = ({ set
           </button>
           <button 
             onClick={onExit} 
-            className="flex-1 py-4 bg-indigo-600 text-white font-bold rounded-2xl hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-900/20 active:scale-95"
+            className="flex-1 py-4 bg-amber-500 text-slate-950 font-bold rounded-2xl hover:bg-amber-600 transition-all shadow-xl shadow-amber-900/20 active:scale-95"
           >
             Finish
           </button>
@@ -167,7 +167,7 @@ export const MatchMode: React.FC<{ setId: string, onExit: () => void }> = ({ set
              {seconds}s
            </div>
            {bestTime && (
-             <div className="hidden sm:flex items-center gap-2 px-4 py-1.5 bg-slate-900 rounded-full border border-slate-800 text-emerald-500 font-bold">
+             <div className="hidden sm:flex items-center gap-2 px-4 py-1.5 bg-slate-900 rounded-full border border-slate-800 text-amber-500 font-bold">
                 <Trophy size={14} />
                 {bestTime}s
              </div>
@@ -176,11 +176,6 @@ export const MatchMode: React.FC<{ setId: string, onExit: () => void }> = ({ set
         <div className="w-8" />
       </div>
 
-      {/* 
-          Grid optimized for viewport:
-          Mobile: 3 columns, 4 rows (12 items)
-          Reduced padding (p-1.5) to allow larger font sizes.
-      */}
       <div className="flex-1 grid grid-cols-3 md:grid-cols-4 grid-rows-4 md:grid-rows-3 gap-1.5 sm:gap-3 md:gap-4 h-full pb-4">
         {tiles.map(tile => {
           const isSelected = selected?.id === tile.id;
@@ -193,8 +188,8 @@ export const MatchMode: React.FC<{ setId: string, onExit: () => void }> = ({ set
               className={`relative h-full w-full p-1.5 sm:p-3 md:p-4 rounded-xl md:rounded-2xl transition-all transform flex items-center justify-center text-center shadow-sm border-2 overflow-hidden ${
                 tile.isMatched ? 'opacity-0 scale-75 pointer-events-none' :
                 isMismatched ? 'bg-red-500 border-red-500 text-white animate-shake' :
-                isSelected ? 'bg-indigo-600 border-indigo-600 text-white scale-105 shadow-[0_0_20px_rgba(79,70,229,0.4)] z-10' :
-                'bg-slate-900 border-slate-800 text-slate-300 hover:border-indigo-500 hover:bg-slate-800 active:scale-95'
+                isSelected ? 'bg-amber-500 border-amber-500 text-slate-950 scale-105 shadow-[0_0_20px_rgba(251,198,4,0.3)] z-10' :
+                'bg-slate-900 border-slate-800 text-slate-300 hover:border-amber-500 hover:bg-slate-800 active:scale-95'
               }`}
             >
               <span className="text-xs xs:text-sm sm:text-base md:text-xl font-bold leading-tight line-clamp-4 break-words hyphens-auto">

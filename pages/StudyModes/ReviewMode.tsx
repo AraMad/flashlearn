@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { DataStore } from '../../store';
 import { CardEntity } from '../../types';
@@ -86,7 +85,7 @@ export const ReviewMode: React.FC<{ setId: string, onExit: () => void }> = ({ se
         </div>
         <button 
           onClick={onExit}
-          className="px-12 py-4 bg-indigo-600 text-white font-bold rounded-2xl hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-900/20 active:scale-95"
+          className="px-12 py-4 bg-accent text-slate-950 font-bold rounded-2xl hover:bg-accent-hover transition-all shadow-xl shadow-accent/20 active:scale-95"
         >
           Back to Set
         </button>
@@ -113,7 +112,7 @@ export const ReviewMode: React.FC<{ setId: string, onExit: () => void }> = ({ se
 
       <div className="w-full h-1 bg-slate-900 rounded-full overflow-hidden border border-slate-800">
         <div 
-          className="h-full bg-indigo-500 transition-all duration-500" 
+          className="h-full bg-accent transition-all duration-500 shadow-[0_0_8px_rgba(247,182,68,0.3)]" 
           style={{ width: `${((currentIndex) / cards.length) * 100}%` }}
         />
       </div>
@@ -162,16 +161,16 @@ export const ReviewMode: React.FC<{ setId: string, onExit: () => void }> = ({ se
           <div className="absolute inset-0 bg-slate-900 rounded-3xl border-2 border-slate-800 shadow-2xl flex flex-col items-center justify-center p-12 text-center backface-hidden">
             <p className="text-slate-600 text-xs font-black uppercase tracking-widest mb-4">Front</p>
             <h3 className="text-2xl md:text-4xl font-bold text-slate-100 leading-tight">{currentCard.front}</h3>
-            <div className="mt-auto flex items-center gap-2 text-indigo-400 text-sm font-bold opacity-60">
+            <div className="mt-auto flex items-center gap-2 text-accent text-sm font-bold opacity-60">
                <RotateCw size={16} /> Tap to flip
             </div>
           </div>
 
           {/* Back */}
-          <div className="absolute inset-0 bg-slate-800 rounded-3xl border-2 border-indigo-900 flex flex-col items-center justify-center p-12 text-center backface-hidden rotate-y-180 shadow-2xl">
-            <p className="text-indigo-400 text-xs font-black uppercase tracking-widest mb-4">Back</p>
+          <div className="absolute inset-0 bg-slate-800 rounded-3xl border-2 border-accent flex flex-col items-center justify-center p-12 text-center backface-hidden rotate-y-180 shadow-2xl">
+            <p className="text-accent text-xs font-black uppercase tracking-widest mb-4">Back</p>
             <h3 className="text-2xl md:text-4xl font-bold text-slate-100 leading-tight">{currentCard.back}</h3>
-            <div className="mt-auto flex items-center gap-2 text-indigo-400 text-sm font-bold opacity-60">
+            <div className="mt-auto flex items-center gap-2 text-accent text-sm font-bold opacity-60">
                <RotateCw size={16} /> Tap to flip back
             </div>
           </div>

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { DataStore } from '../store';
 import { SetSummary, LearnMode } from '../types';
@@ -64,10 +63,10 @@ export const SetDetails: React.FC<SetDetailsProps> = ({ setId, onBack, onStartSt
   if (!set) return null;
 
   const modes: { id: LearnMode, label: string, icon: React.ReactNode, desc: string, minCards: number, color: string }[] = [
-    { id: 'REVIEW', label: 'Flashcards', icon: <LayoutGrid size={24} />, desc: 'Swipe to review terms.', minCards: 1, color: 'bg-emerald-600 hover:bg-emerald-700' },
-    { id: 'LEARN', label: 'Learn', icon: <BookOpen size={24} />, desc: 'Master cards with mixed tasks.', minCards: 4, color: 'bg-indigo-600 hover:bg-indigo-700' },
-    { id: 'MATCH', label: 'Match', icon: <Gamepad2 size={24} />, desc: 'Competitive matching game.', minCards: 3, color: 'bg-amber-600 hover:bg-amber-700' },
-    { id: 'TEST', label: 'Test', icon: <ClipboardCheck size={24} />, desc: 'Check your knowledge officially.', minCards: 4, color: 'bg-blue-600 hover:bg-blue-700' },
+    { id: 'REVIEW', label: 'Flashcards', icon: <LayoutGrid size={24} />, desc: 'Swipe to review terms.', minCards: 1, color: 'bg-emerald-500 hover:bg-emerald-600' },
+    { id: 'LEARN', label: 'Learn', icon: <BookOpen size={24} />, desc: 'Master cards with mixed tasks.', minCards: 4, color: 'bg-indigo-500 hover:bg-indigo-600' },
+    { id: 'MATCH', label: 'Match', icon: <Gamepad2 size={24} />, desc: 'Competitive matching game.', minCards: 3, color: 'bg-orange-500 hover:bg-orange-600' },
+    { id: 'TEST', label: 'Test', icon: <ClipboardCheck size={24} />, desc: 'Check your knowledge officially.', minCards: 4, color: 'bg-blue-500 hover:bg-blue-600' },
   ];
 
   return (
@@ -82,7 +81,7 @@ export const SetDetails: React.FC<SetDetailsProps> = ({ setId, onBack, onStartSt
         <h2 className="text-3xl font-bold text-slate-100">{set.title}</h2>
         <button 
           onClick={onEdit}
-          className="ml-auto flex items-center gap-2 px-4 py-2 text-indigo-400 font-semibold hover:bg-indigo-950/30 rounded-xl transition-all border border-transparent hover:border-indigo-800"
+          className="ml-auto flex items-center gap-2 px-4 py-2 text-accent font-semibold hover:bg-accent-light rounded-xl transition-all border border-transparent hover:border-accent/40"
         >
           <Edit3 size={20} />
           <span className="hidden sm:inline">Edit Set</span>
@@ -95,11 +94,11 @@ export const SetDetails: React.FC<SetDetailsProps> = ({ setId, onBack, onStartSt
             <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-4">Study Progress</h3>
             <div className="flex items-end justify-between mb-2">
                <span className="text-4xl font-black text-slate-100">{set.learnedCount} <span className="text-slate-500 text-lg font-normal">/ {set.cardCount} learned</span></span>
-               <span className="text-indigo-400 font-bold">{set.cardCount ? Math.round((set.learnedCount / set.cardCount) * 100) : 0}%</span>
+               <span className="text-accent font-bold">{set.cardCount ? Math.round((set.learnedCount / set.cardCount) * 100) : 0}%</span>
             </div>
             <div className="h-3 w-full bg-slate-800 rounded-full overflow-hidden">
                <div 
-                 className="h-full bg-indigo-500 transition-all duration-1000 shadow-[0_0_8px_rgba(99,102,241,0.5)]" 
+                 className="h-full bg-accent transition-all duration-1000 shadow-[0_0_8px_rgba(251,198,4,0.3)]" 
                  style={{ width: `${(set.learnedCount / set.cardCount) * 100}%` }}
                />
             </div>
@@ -116,17 +115,17 @@ export const SetDetails: React.FC<SetDetailsProps> = ({ setId, onBack, onStartSt
                   className={`group flex items-center gap-6 p-6 rounded-2xl border transition-all text-left ${
                     disabled 
                     ? 'opacity-40 grayscale cursor-not-allowed border-slate-800 bg-slate-900/50' 
-                    : `bg-slate-900 border-slate-800 hover:border-indigo-500 hover:shadow-xl active:scale-[0.98]`
+                    : `bg-slate-900 border-slate-800 hover:border-slate-700 hover:shadow-xl active:scale-[0.98]`
                   }`}
                 >
-                  <div className={`p-4 rounded-2xl text-white transition-all ${disabled ? 'bg-slate-700' : mode.color}`}>
+                  <div className={`p-4 rounded-2xl transition-all flex items-center justify-center text-white ${disabled ? 'bg-slate-700' : mode.color}`}>
                     {mode.icon}
                   </div>
                   <div className="flex-1">
                     <h4 className="font-bold text-slate-100 text-xl">{mode.label}</h4>
                     <p className="text-sm text-slate-400">{disabled ? `Need ${mode.minCards} cards` : mode.desc}</p>
                   </div>
-                  {!disabled && <Play size={24} className="text-slate-700 group-hover:text-indigo-500 transition-colors" />}
+                  {!disabled && <Play size={24} className="text-slate-700 group-hover:text-slate-400 transition-colors" />}
                 </button>
               );
             })}
@@ -138,8 +137,8 @@ export const SetDetails: React.FC<SetDetailsProps> = ({ setId, onBack, onStartSt
              <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-4">Tags</h3>
              <div className="flex flex-wrap gap-2 mb-4">
                 {set.tags?.map(tag => (
-                  <span key={tag} className="group/tag flex items-center gap-2 px-3 py-1 bg-slate-950 border border-slate-800 text-slate-300 rounded-full text-xs font-bold transition-all hover:border-indigo-500/50">
-                    <TagIcon size={12} className="text-indigo-500" />
+                  <span key={tag} className="group/tag flex items-center gap-2 px-3 py-1 bg-slate-950 border border-slate-800 text-slate-300 rounded-full text-xs font-bold transition-all hover:border-accent/50">
+                    <TagIcon size={12} className="text-accent" />
                     {tag}
                     <button 
                       onClick={() => removeTag(tag)}
@@ -157,7 +156,7 @@ export const SetDetails: React.FC<SetDetailsProps> = ({ setId, onBack, onStartSt
                         <input 
                           autoFocus
                           type="text"
-                          className="w-full bg-slate-950 border border-indigo-600 rounded-full px-3 py-1 text-xs font-bold text-slate-100 outline-none"
+                          className="w-full bg-slate-950 border border-accent rounded-full px-3 py-1 text-xs font-bold text-slate-100 outline-none"
                           placeholder="Tag name..."
                           value={newTag}
                           onChange={(e) => setNewTag(e.target.value)}
@@ -175,7 +174,7 @@ export const SetDetails: React.FC<SetDetailsProps> = ({ setId, onBack, onStartSt
                              <button
                                key={suggestion}
                                onClick={() => handleAddTag(suggestion)}
-                               className="w-full px-3 py-2 text-left text-xs font-bold text-slate-400 hover:bg-indigo-600 hover:text-white transition-colors border-b border-slate-800 last:border-0"
+                               className="w-full px-3 py-2 text-left text-xs font-bold text-slate-400 hover:bg-accent hover:text-slate-950 transition-colors border-b border-slate-800 last:border-0"
                              >
                                {suggestion}
                              </button>

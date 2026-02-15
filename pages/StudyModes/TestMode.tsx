@@ -163,7 +163,7 @@ export const TestMode: React.FC<{ setId: string, onExit: () => void }> = ({ setI
                   type="number" 
                   min={1} 
                   max={allCards.length}
-                  className="bg-transparent px-4 py-3 w-20 text-center font-bold outline-none text-slate-100"
+                  className="bg-transparent px-4 py-3 w-20 text-center font-bold outline-none text-slate-100 focus:text-amber-500"
                   value={questionCount}
                   onChange={(e) => setQuestionCount(Math.min(allCards.length, Math.max(1, parseInt(e.target.value) || 1)))}
                 />
@@ -174,7 +174,7 @@ export const TestMode: React.FC<{ setId: string, onExit: () => void }> = ({ setI
              <span className="text-lg font-bold text-slate-100">Answer with</span>
              <div className="relative">
                 <select 
-                   className="appearance-none bg-slate-900 border border-slate-800 px-6 py-3 pr-12 rounded-2xl font-bold text-slate-100 outline-none focus:border-indigo-500 transition-all cursor-pointer"
+                   className="appearance-none bg-slate-900 border border-slate-800 px-6 py-3 pr-12 rounded-2xl font-bold text-slate-100 outline-none focus:border-amber-500 transition-all cursor-pointer"
                    value={answerWith}
                    onChange={(e) => setAnswerWith(e.target.value as AnswerWith)}
                 >
@@ -188,12 +188,12 @@ export const TestMode: React.FC<{ setId: string, onExit: () => void }> = ({ setI
 
           <div className="flex items-center justify-between pt-2">
             <div className="flex items-center gap-3">
-               <Layers size={20} className="text-indigo-400" />
+               <Layers size={20} className="text-amber-500" />
                <span className="text-lg font-bold text-slate-100">Group question types</span>
             </div>
             <button 
               onClick={() => setGroupQuestionTypes(!groupQuestionTypes)}
-              className={`relative w-14 h-8 rounded-full transition-colors ${groupQuestionTypes ? 'bg-indigo-600 shadow-[0_0_10px_rgba(79,70,229,0.5)]' : 'bg-slate-800'}`}
+              className={`relative w-14 h-8 rounded-full transition-colors ${groupQuestionTypes ? 'bg-amber-500 shadow-[0_0_10px_rgba(251,198,4,0.3)]' : 'bg-slate-800'}`}
             >
               <div className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition-transform ${groupQuestionTypes ? 'translate-x-6' : 'translate-x-0'}`} />
             </button>
@@ -210,7 +210,7 @@ export const TestMode: React.FC<{ setId: string, onExit: () => void }> = ({ setI
                 </span>
                 <button 
                   onClick={() => setEnabledTypes(prev => ({ ...prev, [type]: !prev[type] }))}
-                  className={`relative w-14 h-8 rounded-full transition-colors ${enabledTypes[type] ? 'bg-indigo-600 shadow-[0_0_10px_rgba(79,70,229,0.5)]' : 'bg-slate-800'}`}
+                  className={`relative w-14 h-8 rounded-full transition-colors ${enabledTypes[type] ? 'bg-amber-500 shadow-[0_0_10px_rgba(251,198,4,0.3)]' : 'bg-slate-800'}`}
                 >
                   <div className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition-transform ${enabledTypes[type] ? 'translate-x-6' : 'translate-x-0'}`} />
                 </button>
@@ -222,7 +222,7 @@ export const TestMode: React.FC<{ setId: string, onExit: () => void }> = ({ setI
              <button 
                 onClick={handleStartTest}
                 disabled={!Object.values(enabledTypes).some(v => v)}
-                className="px-10 py-4 bg-indigo-600 text-white font-black text-lg rounded-full hover:bg-indigo-700 active:scale-95 transition-all shadow-xl shadow-indigo-900/20 disabled:opacity-50 disabled:grayscale"
+                className="px-10 py-4 bg-amber-500 text-slate-950 font-black text-lg rounded-full hover:bg-amber-600 active:scale-95 transition-all shadow-xl shadow-amber-900/20 disabled:opacity-50 disabled:grayscale"
              >
                 Start test
              </button>
@@ -246,11 +246,11 @@ export const TestMode: React.FC<{ setId: string, onExit: () => void }> = ({ setI
         </div>
 
         <div className="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden border border-slate-800">
-           <div className="h-full bg-indigo-500 transition-all duration-300" style={{ width: `${progress}%` }} />
+           <div className="h-full bg-amber-500 transition-all duration-300" style={{ width: `${progress}%` }} />
         </div>
 
         <div className="bg-slate-900/40 p-10 md:p-16 rounded-[40px] border border-slate-800 flex flex-col items-center justify-center text-center space-y-8 min-h-[400px]">
-           <p className="text-xs font-black text-indigo-500 uppercase tracking-[0.3em]">
+           <p className="text-xs font-black text-amber-500 uppercase tracking-[0.3em]">
                {q.type === 'TF' ? 'True/False' : q.type === 'MCQ' ? 'Multiple Choice' : 'Written'}
            </p>
            <h3 className="text-4xl md:text-5xl font-bold text-slate-100 leading-tight">{q.prompt}</h3>
@@ -267,7 +267,7 @@ export const TestMode: React.FC<{ setId: string, onExit: () => void }> = ({ setI
                   type="text"
                   autoFocus
                   placeholder="Type your answer..."
-                  className="w-full bg-transparent border-b-2 border-slate-800 focus:border-indigo-500 text-center text-2xl py-2 outline-none transition-all placeholder:text-slate-800"
+                  className="w-full bg-transparent border-b-2 border-slate-800 focus:border-amber-500 text-center text-2xl py-2 outline-none transition-all placeholder:text-slate-800 text-slate-100"
                   value={currentInput}
                   onChange={(e) => setCurrentInput(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && currentInput.trim() && handleNext(currentInput)}
@@ -300,7 +300,7 @@ export const TestMode: React.FC<{ setId: string, onExit: () => void }> = ({ setI
                   <button 
                     key={opt}
                     onClick={() => handleNext(opt)}
-                    className="p-6 bg-slate-900 border-2 border-slate-800 rounded-3xl text-lg font-bold text-slate-200 text-left hover:border-indigo-500 transition-all"
+                    className="p-6 bg-slate-900 border-2 border-slate-800 rounded-3xl text-lg font-bold text-slate-200 text-left hover:border-amber-500 transition-all"
                   >
                     {opt}
                   </button>
@@ -312,7 +312,7 @@ export const TestMode: React.FC<{ setId: string, onExit: () => void }> = ({ setI
               <button 
                 disabled={!currentInput.trim()}
                 onClick={() => handleNext(currentInput)}
-                className="w-full py-5 bg-indigo-600 text-white rounded-3xl font-bold text-xl shadow-xl shadow-indigo-900/20 hover:bg-indigo-700 disabled:opacity-50 transition-all flex items-center justify-center gap-3"
+                className="w-full py-5 bg-amber-500 text-slate-950 rounded-3xl font-bold text-xl shadow-xl shadow-amber-900/20 hover:bg-amber-600 disabled:opacity-50 transition-all flex items-center justify-center gap-3"
               >
                  Next <ArrowRight size={24} />
               </button>
@@ -329,11 +329,11 @@ export const TestMode: React.FC<{ setId: string, onExit: () => void }> = ({ setI
   return (
     <div className="max-w-2xl mx-auto space-y-12 pb-20 animate-in zoom-in duration-500">
       <div className="text-center space-y-6 pt-10">
-         <div className="inline-flex p-6 bg-indigo-600/10 rounded-full border border-indigo-500/30 text-indigo-400 mb-4 animate-bounce">
+         <div className="inline-flex p-6 bg-amber-500/10 rounded-full border border-amber-500/30 text-amber-500 mb-4 animate-bounce">
             <Award size={64} />
          </div>
          <h2 className="text-5xl font-black text-slate-100">Test Complete!</h2>
-         <p className="text-slate-400 text-xl font-medium">You scored <span className="text-indigo-400 font-black">{percentage}%</span></p>
+         <p className="text-slate-400 text-xl font-medium">You scored <span className="text-amber-500 font-black">{percentage}%</span></p>
          
          <div className="flex items-center justify-center gap-12 pt-4">
             <div className="text-center">
@@ -356,7 +356,7 @@ export const TestMode: React.FC<{ setId: string, onExit: () => void }> = ({ setI
          </button>
          <button 
            onClick={onExit}
-           className="flex-1 py-4 bg-indigo-600 text-white rounded-2xl font-bold shadow-xl shadow-indigo-900/20 hover:bg-indigo-700 active:scale-95 transition-all"
+           className="flex-1 py-4 bg-amber-500 text-slate-950 rounded-2xl font-bold shadow-xl shadow-amber-900/20 hover:bg-amber-600 active:scale-95 transition-all"
          >
            Finish Study
          </button>

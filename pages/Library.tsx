@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { DataStore } from '../store';
 import { SetSummary } from '../types';
@@ -60,7 +59,7 @@ export const Library: React.FC<LibraryProps> = ({ onSelectSet, onEditSet }) => {
           <input 
             type="text" 
             placeholder="Search your sets..."
-            className="w-full pl-10 pr-4 py-2 bg-slate-900 border border-slate-800 text-slate-100 rounded-xl focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 outline-none transition-all placeholder:text-slate-600"
+            className="w-full pl-10 pr-4 py-2 bg-slate-900 border border-slate-800 text-slate-100 rounded-xl focus:ring-2 focus:ring-accent focus:border-accent outline-none transition-all placeholder:text-slate-600"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -71,13 +70,13 @@ export const Library: React.FC<LibraryProps> = ({ onSelectSet, onEditSet }) => {
         <div className="flex gap-2 p-1 bg-slate-900 rounded-lg w-fit border border-slate-800">
           <button 
             onClick={() => setFilter('all')}
-            className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${filter === 'all' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}
+            className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${filter === 'all' ? 'bg-accent text-slate-950 shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}
           >
             All Sets
           </button>
           <button 
             onClick={() => setFilter('favorites')}
-            className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${filter === 'favorites' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}
+            className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${filter === 'favorites' ? 'bg-accent text-slate-950 shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}
           >
             Favorites
           </button>
@@ -87,7 +86,7 @@ export const Library: React.FC<LibraryProps> = ({ onSelectSet, onEditSet }) => {
           <div className="flex items-center gap-3 overflow-x-auto pb-2 no-scrollbar">
             <button
               onClick={() => setSelectedTag(null)}
-              className={`whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-bold border transition-all ${!selectedTag ? 'bg-indigo-600/20 border-indigo-500 text-indigo-400' : 'bg-slate-900 border-slate-800 text-slate-500'}`}
+              className={`whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-bold border transition-all ${!selectedTag ? 'bg-accent-light border-accent/50 text-accent' : 'bg-slate-900 border-slate-800 text-slate-500'}`}
             >
               All Tags
             </button>
@@ -95,7 +94,7 @@ export const Library: React.FC<LibraryProps> = ({ onSelectSet, onEditSet }) => {
               <button
                 key={tag}
                 onClick={() => setSelectedTag(selectedTag === tag ? null : tag)}
-                className={`whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-bold border transition-all flex items-center gap-2 ${selectedTag === tag ? 'bg-indigo-600/20 border-indigo-500 text-indigo-400 shadow-[0_0_15px_rgba(99,102,241,0.2)]' : 'bg-slate-900 border-slate-800 text-slate-500 hover:border-slate-700'}`}
+                className={`whitespace-nowrap px-4 py-1.5 rounded-full text-xs font-bold border transition-all flex items-center gap-2 ${selectedTag === tag ? 'bg-accent-light border-accent text-accent shadow-[0_0_15px_rgba(251,198,4,0.1)]' : 'bg-slate-900 border-slate-800 text-slate-500 hover:border-slate-700'}`}
               >
                 <Tag size={12} />
                 {tag}
@@ -117,7 +116,7 @@ export const Library: React.FC<LibraryProps> = ({ onSelectSet, onEditSet }) => {
           {(search || selectedTag) && (
             <button 
                 onClick={() => { setSearch(''); setSelectedTag(null); }}
-                className="mt-4 text-indigo-400 font-bold hover:underline"
+                className="mt-4 text-accent font-bold hover:underline"
             >
                 Clear all filters
             </button>
@@ -129,28 +128,28 @@ export const Library: React.FC<LibraryProps> = ({ onSelectSet, onEditSet }) => {
             <div 
               key={set.id}
               onClick={() => onSelectSet(set.id)}
-              className="group bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-800 hover:border-indigo-500 hover:shadow-indigo-900/10 hover:shadow-md transition-all cursor-pointer relative flex flex-col"
+              className="group bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-800 hover:border-accent hover:shadow-accent/10 hover:shadow-md transition-all cursor-pointer relative flex flex-col"
             >
               <div className="flex justify-between items-start mb-4">
-                <div className="flex items-center gap-2 text-xs font-semibold text-indigo-400 uppercase tracking-wider">
+                <div className="flex items-center gap-2 text-xs font-semibold text-accent uppercase tracking-wider">
                   <Clock size={12} />
                   <span>{new Date(set.updatedAt).toLocaleDateString()}</span>
                 </div>
                 <button 
                   onClick={(e) => toggleFav(e, set.id)}
-                  className={`p-1.5 rounded-full transition-colors ${set.isFavorite ? 'text-amber-400' : 'text-slate-600 hover:text-amber-400'}`}
+                  className={`p-1.5 rounded-full transition-colors ${set.isFavorite ? 'text-accent' : 'text-slate-600 hover:text-accent'}`}
                 >
                   <Star size={20} fill={set.isFavorite ? 'currentColor' : 'none'} />
                 </button>
               </div>
 
-              <h3 className="text-xl font-bold text-slate-100 mb-2 group-hover:text-indigo-400 transition-colors">{set.title}</h3>
+              <h3 className="text-xl font-bold text-slate-100 mb-2 group-hover:text-accent transition-colors">{set.title}</h3>
               <p className="text-slate-400 text-sm line-clamp-2 mb-4">{set.description || 'No description provided.'}</p>
 
               {set.tags && set.tags.length > 0 && (
                 <div className="flex flex-wrap gap-1.5 mb-6">
                     {set.tags.slice(0, 3).map(tag => (
-                        <span key={tag} className="px-2 py-0.5 bg-slate-950 border border-slate-800 text-[10px] font-bold text-slate-500 rounded-md">
+                        <span key={tag} className="px-2 py-0.5 bg-slate-950 border border-slate-800 text-[10px] font-bold text-slate-400 rounded-md">
                             {tag}
                         </span>
                     ))}
@@ -167,7 +166,7 @@ export const Library: React.FC<LibraryProps> = ({ onSelectSet, onEditSet }) => {
                 <div className="flex gap-2">
                    <button 
                     onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEditSet(set.id); }}
-                    className="p-2 text-slate-500 hover:text-indigo-400 transition-colors"
+                    className="p-2 text-slate-500 hover:text-accent transition-colors"
                   >
                     <Edit2 size={18} />
                   </button>
@@ -183,7 +182,7 @@ export const Library: React.FC<LibraryProps> = ({ onSelectSet, onEditSet }) => {
               {set.cardCount > 0 && (
                 <div className="absolute top-0 left-0 w-full h-1 bg-slate-800 rounded-t-2xl overflow-hidden">
                   <div 
-                    className="h-full bg-indigo-500 transition-all duration-1000" 
+                    className="h-full bg-accent transition-all duration-1000" 
                     style={{ width: `${(set.learnedCount / set.cardCount) * 100}%` }}
                   />
                 </div>
@@ -196,7 +195,7 @@ export const Library: React.FC<LibraryProps> = ({ onSelectSet, onEditSet }) => {
       {/* Attribution Footer */}
       <div className="mt-auto pt-12 pb-4 text-center">
         <p className="text-[11px] text-slate-600 font-medium tracking-wide">
-          demo AI app by <a href="https://www.starksoft.online/ai-powered-prototyping-service-starksoft" target="_blank" rel="noopener noreferrer" className="text-slate-500 underline decoration-slate-700 hover:text-indigo-400 hover:decoration-indigo-500 transition-all">StarkSoft</a>
+          demo AI app by <a href="https://www.starksoft.online/ai-powered-prototyping-service-starksoft" target="_blank" rel="noopener noreferrer" className="text-slate-500 underline decoration-slate-700 hover:text-accent hover:decoration-accent transition-all">StarkSoft</a>
         </p>
       </div>
 

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { DataStore } from '../store';
 import { CardEntity } from '../types';
@@ -128,7 +127,7 @@ export const SetEditor: React.FC<SetEditorProps> = ({ setId, onCancel, onSave })
             className={`flex items-center gap-2 px-8 py-2.5 rounded-xl font-bold transition-all shadow-lg ${
               isSaveDisabled 
               ? 'bg-slate-900 text-slate-600 cursor-not-allowed shadow-none border border-slate-800' 
-              : 'bg-indigo-600 text-white hover:bg-indigo-700 active:scale-95 shadow-indigo-900/20'
+              : 'bg-accent text-slate-950 hover:bg-accent-hover active:scale-95 shadow-accent/20'
             }`}
           >
             <Save size={20} />
@@ -143,7 +142,7 @@ export const SetEditor: React.FC<SetEditorProps> = ({ setId, onCancel, onSave })
           <input 
             type="text" 
             placeholder='e.g., "Intro to Spanish", "Chem 101 Finals"'
-            className="w-full bg-transparent px-4 py-3 text-lg border-b-2 border-slate-800 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-700 text-slate-100"
+            className="w-full bg-transparent px-4 py-3 text-lg border-b-2 border-slate-800 focus:border-accent outline-none transition-all placeholder:text-slate-700 text-slate-100"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
           />
@@ -153,7 +152,7 @@ export const SetEditor: React.FC<SetEditorProps> = ({ setId, onCancel, onSave })
           <textarea 
             rows={2}
             placeholder="Add a brief description..."
-            className="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl focus:ring-2 focus:ring-indigo-600 outline-none transition-all text-slate-100 placeholder:text-slate-700"
+            className="w-full px-4 py-3 bg-slate-950 border border-slate-800 rounded-xl focus:ring-2 focus:ring-accent outline-none transition-all text-slate-100 placeholder:text-slate-700"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
           />
@@ -163,7 +162,7 @@ export const SetEditor: React.FC<SetEditorProps> = ({ setId, onCancel, onSave })
           <label className="text-sm font-bold text-slate-400">Tags (Optional)</label>
           <div className="flex flex-wrap gap-2 mb-2">
             {tags.map(tag => (
-              <span key={tag} className="flex items-center gap-2 px-3 py-1 bg-slate-950 border border-slate-800 text-indigo-400 rounded-full text-xs font-bold">
+              <span key={tag} className="flex items-center gap-2 px-3 py-1 bg-slate-950 border border-slate-800 text-accent rounded-full text-xs font-bold">
                 <Tag size={12} />
                 {tag}
                 <button onClick={() => removeTag(tag)} className="text-slate-600 hover:text-red-400"><X size={12} /></button>
@@ -175,7 +174,7 @@ export const SetEditor: React.FC<SetEditorProps> = ({ setId, onCancel, onSave })
               <input 
                 type="text"
                 placeholder="Add a tag..."
-                className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-slate-100 outline-none focus:border-indigo-500 transition-all"
+                className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-slate-100 outline-none focus:border-accent transition-all"
                 value={tagInput}
                 onChange={(e) => setTagInput(e.target.value)}
               />
@@ -194,7 +193,7 @@ export const SetEditor: React.FC<SetEditorProps> = ({ setId, onCancel, onSave })
                     key={suggestion}
                     type="button"
                     onClick={() => handleAddTag(suggestion)}
-                    className="w-full px-4 py-3 text-left text-sm font-bold text-slate-400 hover:bg-indigo-600 hover:text-white transition-colors border-b border-slate-800 last:border-0"
+                    className="w-full px-4 py-3 text-left text-sm font-bold text-slate-400 hover:bg-accent hover:text-slate-950 transition-colors border-b border-slate-800 last:border-0"
                   >
                     {suggestion}
                   </button>
@@ -207,12 +206,12 @@ export const SetEditor: React.FC<SetEditorProps> = ({ setId, onCancel, onSave })
 
       <div className="flex items-center justify-between">
         <h3 className="text-xl font-bold text-slate-100 flex items-center gap-2">
-          <LayoutList size={24} className="text-indigo-400" />
+          <LayoutList size={24} className="text-accent" />
           Flashcards ({cards.length})
         </h3>
         <button 
           onClick={() => setIsBulkImport(true)}
-          className="flex items-center gap-2 text-sm text-indigo-400 font-bold hover:text-indigo-300 transition-colors"
+          className="flex items-center gap-2 text-sm text-accent font-bold hover:text-accent-hover transition-colors"
         >
           <FileText size={18} />
           Bulk Import
@@ -221,7 +220,7 @@ export const SetEditor: React.FC<SetEditorProps> = ({ setId, onCancel, onSave })
 
       <div className="space-y-4">
         {cards.map((card, index) => (
-          <div key={index} className="group relative bg-slate-900 p-6 rounded-2xl border border-slate-800 shadow-sm hover:border-indigo-800 transition-all flex flex-col md:flex-row gap-6">
+          <div key={index} className="group relative bg-slate-900 p-6 rounded-2xl border border-slate-800 shadow-sm hover:border-accent/60 transition-all flex flex-col md:flex-row gap-6">
             <span className="absolute -left-3 top-1/2 -translate-y-1/2 bg-slate-800 text-slate-400 font-bold w-8 h-8 flex items-center justify-center rounded-full text-xs border border-slate-700">
               {index + 1}
             </span>
@@ -230,7 +229,7 @@ export const SetEditor: React.FC<SetEditorProps> = ({ setId, onCancel, onSave })
               <input 
                 type="text" 
                 placeholder="Term"
-                className="w-full bg-transparent border-b border-slate-800 focus:border-indigo-400 outline-none py-1 transition-all text-slate-100"
+                className="w-full bg-transparent border-b border-slate-800 focus:border-accent outline-none py-1 transition-all text-slate-100"
                 value={card.front}
                 onChange={(e) => updateCard(index, 'front', e.target.value)}
               />
@@ -240,7 +239,7 @@ export const SetEditor: React.FC<SetEditorProps> = ({ setId, onCancel, onSave })
               <input 
                 type="text" 
                 placeholder="Definition"
-                className="w-full bg-transparent border-b border-slate-800 focus:border-indigo-400 outline-none py-1 transition-all text-slate-100"
+                className="w-full bg-transparent border-b border-slate-800 focus:border-accent outline-none py-1 transition-all text-slate-100"
                 value={card.back}
                 onChange={(e) => updateCard(index, 'back', e.target.value)}
               />
@@ -257,7 +256,7 @@ export const SetEditor: React.FC<SetEditorProps> = ({ setId, onCancel, onSave })
 
       <button 
         onClick={addCard}
-        className="w-full py-10 bg-slate-900/50 border-2 border-dashed border-slate-800 rounded-2xl text-slate-500 font-bold hover:border-indigo-800 hover:text-indigo-400 transition-all flex flex-col items-center justify-center gap-2"
+        className="w-full py-10 bg-slate-900/50 border-2 border-dashed border-slate-800 rounded-2xl text-slate-500 font-bold hover:border-accent/40 hover:text-accent transition-all flex flex-col items-center justify-center gap-2"
       >
         <Plus size={32} />
         Add another card
@@ -274,12 +273,12 @@ export const SetEditor: React.FC<SetEditorProps> = ({ setId, onCancel, onSave })
               </button>
             </div>
             <div className="p-6 space-y-4">
-              <p className="text-sm text-slate-300 bg-indigo-950/30 p-4 rounded-xl border border-indigo-900/50">
+              <p className="text-sm text-slate-300 bg-accent-light p-4 rounded-xl border border-accent-border">
                 Paste your data below. Use <strong>-</strong>, <strong>;</strong>, or <strong>,</strong> to separate front and back. Each new card should be on a new line.
               </p>
               <textarea 
                 rows={10}
-                className="w-full p-4 bg-slate-950 border border-slate-800 rounded-2xl font-mono text-sm focus:ring-2 focus:ring-indigo-600 outline-none text-slate-100"
+                className="w-full p-4 bg-slate-950 border border-slate-800 rounded-2xl font-mono text-sm focus:ring-2 focus:ring-accent outline-none text-slate-100"
                 placeholder="Word 1 - Definition 1&#10;Word 2 - Definition 2"
                 value={bulkText}
                 onChange={(e) => setBulkText(e.target.value)}
@@ -290,7 +289,7 @@ export const SetEditor: React.FC<SetEditorProps> = ({ setId, onCancel, onSave })
               <button 
                 onClick={handleBulkImport}
                 disabled={!bulkText.trim()}
-                className="px-8 py-2 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+                className="px-8 py-2 bg-accent text-slate-950 font-bold rounded-xl hover:bg-accent-hover disabled:opacity-50 transition-colors"
               >
                 Parse & Add
               </button>

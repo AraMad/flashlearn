@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Library } from './pages/Library';
 import { SetDetails } from './pages/SetDetails';
@@ -11,7 +10,7 @@ import { TestMode } from './pages/StudyModes/TestMode';
 import { Sidebar } from './components/Sidebar';
 import { LearnMode } from './types';
 import { DataStore } from './store';
-import { Plus, Sparkles, Settings as SettingsIcon } from 'lucide-react';
+import { Plus, Settings as SettingsIcon } from 'lucide-react';
 
 type Screen = 'library' | 'details' | 'editor' | 'study' | 'settings';
 
@@ -67,8 +66,12 @@ const App: React.FC = () => {
         {!isStudyMode && (
           <div className="md:hidden flex items-center justify-between p-4 border-b border-slate-900 bg-slate-950/80 backdrop-blur-md sticky top-0 z-30">
             <div className="flex items-center gap-2" onClick={navigateToLibrary}>
-              <div className="bg-indigo-600 p-1.5 rounded-lg text-white">
-                <Sparkles size={18} />
+              <div className="bg-slate-900 p-1 rounded-lg border border-slate-800">
+                <img 
+                  src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAwIiBoZWlnaHQ9IjUwMCIgdmlld0JveD0iMCAwIDUwMCA1MDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJncmFkIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjAlIiB5Mj0iMTAwJSI+PHN0b3Agb2Zmc2V0PSIwJSIgc3R5bGU9InN0b3AtY29sb3I6I0U4NEUyRTtzdG9wLW9wYWNpdHk6MSIgLz48c3RvcCBvZmZzZXQ9IjEwMCUiIHN0eWxlPSJzdG9wLWNvbG9yOiNGN0I2NDQ7c3RvcC1vcGFjaXR5OjEiIC8+PC9saW5lYXJHcmFkaWVudD48L2RlZnM+PGNpcmNsZSBjeD0iMTMwIiBjeT0iMTQwIiByPSI0NSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ1cmwoI2dyYWQpIiBzdHJva2Utd2lkdGg9IjM1Ii8+PHBhdGggZD0iTTIyMCA0MjAgTDIyMCAxMjAgUTIyMCAxMDAgMjQwIDEwMCBMMzgwIDEwMCBNMjIwIDI2MCBMMzQwIDI2MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ1cmwoI2dyYWQpIiBzdHJva2Utd2lkdGg9IjM1IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4=" 
+                  alt="FlashLearn Logo" 
+                  className="w-8 h-8 object-contain"
+                />
               </div>
               <h1 className="text-lg font-bold text-slate-100 tracking-tight">FlashLearn</h1>
             </div>
@@ -77,7 +80,7 @@ const App: React.FC = () => {
               onClick={navigateToSettings}
               className={`p-2 rounded-xl border transition-all ${
                 currentScreen === 'settings' 
-                ? 'bg-indigo-600 text-white border-indigo-500 shadow-lg shadow-indigo-900/40' 
+                ? 'bg-accent text-slate-950 border-accent shadow-lg shadow-accent/40' 
                 : 'bg-slate-900 text-slate-400 border-slate-800 active:bg-slate-800'
               }`}
             >
@@ -125,7 +128,7 @@ const App: React.FC = () => {
         {currentScreen === 'library' && (
           <button
             onClick={() => navigateToEditor()}
-            className="md:hidden fixed bottom-6 right-6 w-14 h-14 bg-indigo-600 text-white rounded-full shadow-2xl flex items-center justify-center active:scale-95 transition-all z-50 border border-indigo-400/30"
+            className="md:hidden fixed bottom-6 right-6 w-14 h-14 bg-accent text-slate-950 rounded-full shadow-2xl flex items-center justify-center active:scale-95 transition-all z-50 border border-accent/30"
           >
             <Plus size={28} />
           </button>
