@@ -1,9 +1,13 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { DataStore, BackupPayload } from '../store';
-import { Download, Upload, ShieldCheck, Database, Calendar, FileJson, AlertCircle, Loader2 } from 'lucide-react';
+import { Download, Upload, ShieldCheck, Database, Calendar, FileJson, AlertCircle, Loader2, ChevronLeft } from 'lucide-react';
 
-export const Settings: React.FC = () => {
+interface SettingsProps {
+  onBack?: () => void;
+}
+
+export const Settings: React.FC<SettingsProps> = ({ onBack }) => {
   const [backupInfo, setBackupInfo] = useState<{ timestamp: number, filename: string } | null>(null);
   const [importStatus, setImportStatus] = useState<{ 
     type: 'success' | 'error', 
@@ -37,7 +41,6 @@ export const Settings: React.FC = () => {
       setImportStatus(null);
 
       try {
-        // Simulate reading progress for better UX
         const reader = new FileReader();
         
         reader.onprogress = (event) => {
@@ -50,12 +53,9 @@ export const Settings: React.FC = () => {
         const text = await file.text();
         setImportProgress(70);
         
-        // Artificial delay for visual feedback of "processing"
         await new Promise(resolve => setTimeout(resolve, 600));
 
         const payload: BackupPayload = JSON.parse(text);
-        
-        // Finalize import
         const success = await DataStore.importData(file);
         setImportProgress(100);
 
@@ -79,16 +79,24 @@ export const Settings: React.FC = () => {
         if (fileInputRef.current) fileInputRef.current.value = '';
       }
     } else {
-        // User cancelled confirmation
         if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
-      <div className="border-b border-slate-900 pb-4">
-        <h2 className="text-3xl font-bold text-slate-100">Settings</h2>
-        <p className="text-slate-400 mt-1">Manage your data and application preferences.</p>
+      <div className="flex items-center gap-4 border-b border-slate-900 pb-4">
+        {onBack && (
+          <button 
+            onClick={onBack}
+            className="md:hidden p-2 -ml-2 text-slate-400 hover:text-slate-100 hover:bg-slate-900 rounded-full transition-all"
+          >
+            <ChevronLeft size={24} />
+          </button>
+        )}
+        <div>
+          <h2 className="text-3xl font-bold text-slate-100">Settings</h2>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -121,8 +129,7 @@ export const Settings: React.FC = () => {
 
           <div className="space-y-4">
             <p className="text-sm text-slate-400 leading-relaxed">
-              Securely export your study sets, flashcards, and progress to a JSON file. 
-              You can restore this backup later to recover your data or move it to another device.
+              Securely export your study sets, flashcards, and progress to a file and save locally
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4">
@@ -206,9 +213,7 @@ export const Settings: React.FC = () => {
            <div className="bg-slate-900/50 p-6 rounded-2xl border border-slate-800">
               <h3 className="text-lg font-bold text-slate-200 mb-2">Security Note</h3>
               <p className="text-sm text-slate-500 leading-relaxed">
-                Backup files are signed with a security signature to prevent accidental corruption. 
-                Always keep your backup files in a safe place. FlashLearn does not store your data 
-                remotely; everything is kept locally on your browser.
+                Backup files are signed with a security signature to prevent accidental corruption. Everything is kept locally on your browser.
               </p>
            </div>
            
