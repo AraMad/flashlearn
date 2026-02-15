@@ -50,11 +50,13 @@ export const SetEditor: React.FC<SetEditorProps> = ({ setId, onCancel, onSave })
     const validCards = cards.filter(c => c.front.trim() && c.back.trim());
     if (validCards.length === 0) return;
 
+    let finalId = setId;
     if (setId) {
-        DataStore.deleteSet(setId);
+        finalId = DataStore.updateSet(setId, title, description, validCards);
+    } else {
+        finalId = DataStore.addSet(title, description, validCards);
     }
-    const newId = DataStore.addSet(title, description, validCards);
-    onSave(newId);
+    onSave(finalId);
   };
 
   const handleBulkImport = () => {
