@@ -1,6 +1,6 @@
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { DataStore } from '../store';
-import { CardEntity } from '../types';
 import { Plus, Trash2, Save, X, FileText, LayoutList, Tag } from 'lucide-react';
 
 interface SetEditorProps {
@@ -112,19 +112,19 @@ export const SetEditor: React.FC<SetEditorProps> = ({ setId, onCancel, onSave })
 
   return (
     <div className="space-y-8 pb-20 animate-in slide-in-from-bottom duration-300">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <h2 className="text-3xl font-bold text-slate-100">{setId ? 'Edit Set' : 'Create a New Set'}</h2>
-        <div className="flex gap-3">
+        <div className="flex gap-2">
           <button 
             onClick={onCancel}
-            className="px-6 py-2.5 text-slate-400 font-semibold hover:bg-slate-900 rounded-xl transition-all"
+            className="px-4 py-2 text-slate-400 font-semibold hover:bg-slate-900 rounded-xl transition-all"
           >
             Cancel
           </button>
           <button 
             onClick={handleSave}
             disabled={isSaveDisabled}
-            className={`flex items-center gap-2 px-8 py-2.5 rounded-xl font-bold transition-all shadow-lg ${
+            className={`flex items-center gap-2 px-6 py-2 rounded-xl font-bold transition-all shadow-lg ${
               isSaveDisabled 
               ? 'bg-slate-900 text-slate-600 cursor-not-allowed shadow-none border border-slate-800' 
               : 'bg-accent text-slate-950 hover:bg-accent-hover active:scale-95 shadow-accent/20'
@@ -136,7 +136,7 @@ export const SetEditor: React.FC<SetEditorProps> = ({ setId, onCancel, onSave })
         </div>
       </div>
 
-      <div className="bg-slate-900 p-8 rounded-2xl shadow-sm border border-slate-800 space-y-6">
+      <div className="bg-slate-900 p-6 md:p-8 rounded-2xl shadow-sm border border-slate-800 space-y-6">
         <div className="space-y-2">
           <label className="text-sm font-bold text-slate-400">Set Title</label>
           <input 
@@ -204,18 +204,20 @@ export const SetEditor: React.FC<SetEditorProps> = ({ setId, onCancel, onSave })
         </div>
       </div>
 
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <h3 className="text-xl font-bold text-slate-100 flex items-center gap-2">
           <LayoutList size={24} className="text-accent" />
           Flashcards ({cards.length})
         </h3>
-        <button 
-          onClick={() => setIsBulkImport(true)}
-          className="flex items-center gap-2 text-sm text-accent font-bold hover:text-accent-hover transition-colors"
-        >
-          <FileText size={18} />
-          Bulk Import
-        </button>
+        <div className="flex gap-4">
+          <button 
+            onClick={() => setIsBulkImport(true)}
+            className="flex items-center gap-2 text-sm text-slate-400 font-bold hover:text-slate-200 transition-colors"
+          >
+            <FileText size={18} />
+            Bulk Import
+          </button>
+        </div>
       </div>
 
       <div className="space-y-4">

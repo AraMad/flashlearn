@@ -1,7 +1,7 @@
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DataStore } from '../../store';
-import { CardEntity } from '../../types';
+import { CardEntity, LearnMode } from '../../types';
 import { ChevronLeft, Check, X, ArrowRight, Sparkles } from 'lucide-react';
 
 type TaskType = 'TF' | 'MCQ' | 'TYPE';
@@ -12,7 +12,7 @@ interface Task {
   question: any;
 }
 
-export const UnifiedLearnMode: React.FC<{ setId: string, onExit: () => void }> = ({ setId, onExit }) => {
+export const UnifiedLearnMode: React.FC<{ setId: string, mode?: LearnMode, onExit: () => void }> = ({ setId, mode, onExit }) => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [feedback, setFeedback] = useState<'correct' | 'wrong' | null>(null);
@@ -24,10 +24,16 @@ export const UnifiedLearnMode: React.FC<{ setId: string, onExit: () => void }> =
   useEffect(() => {
     const allCards = DataStore.getCards().filter(c => c.setId === setId).sort(() => Math.random() - 0.5);
     
-    // Generate a sequence of tasks
+    // Determine which task types are allowed for this session
+    const allowedTypes: TaskType[] = [];
+    if (mode === 'TF') allowedTypes.push('TF');
+    else if (mode === 'MCQ') allowedTypes.push('MCQ');
+    else if (mode === 'TYPE') allowedTypes.push('TYPE');
+    else allowedTypes.push('TF', 'MCQ', 'TYPE');
+
     const generatedTasks: Task[] = allCards.map((card, idx) => {
-      // Rotate through types
-      const type: TaskType = idx % 3 === 0 ? 'TF' : idx % 3 === 1 ? 'MCQ' : 'TYPE';
+      // Pick type from allowed list
+      const type = allowedTypes[idx % allowedTypes.length];
       
       let question: any = {};
       if (type === 'TF') {
@@ -52,7 +58,7 @@ export const UnifiedLearnMode: React.FC<{ setId: string, onExit: () => void }> =
     });
 
     setTasks(generatedTasks);
-  }, [setId]);
+  }, [setId, mode]);
 
   const handleAnswer = (isCorrect: boolean, id?: string) => {
     if (feedback) return;
@@ -78,6 +84,7 @@ export const UnifiedLearnMode: React.FC<{ setId: string, onExit: () => void }> =
   const handleTypeSubmit = (e?: React.FormEvent) => {
     e?.preventDefault();
     if (!input.trim()) return;
+    // Fuzzy matching: ignore case and extra whitespace
     const isCorrect = input.trim().toLowerCase() === tasks[currentIndex].card.back.trim().toLowerCase();
     handleAnswer(isCorrect);
   };

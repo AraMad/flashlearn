@@ -151,7 +151,7 @@ const StudyContainer: React.FC<{ setId: string, mode: LearnMode, onExit: () => v
     case 'TEST': return <TestMode setId={setId} onExit={onExit} />;
     case 'TF':
     case 'MCQ':
-    case 'TYPE': return <UnifiedLearnMode setId={setId} onExit={onExit} />;
+    case 'TYPE': return <UnifiedLearnMode setId={setId} mode={mode} onExit={onExit} />;
     default: return <div className="text-center p-10 text-slate-400">Invalid Mode</div>;
   }
 };
