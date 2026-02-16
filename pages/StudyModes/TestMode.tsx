@@ -281,13 +281,13 @@ export const TestMode: React.FC<{ setId: string, onExit: () => void }> = ({ setI
              <div className="grid grid-cols-2 gap-4 h-24">
                 <button 
                   onClick={() => handleNext('false')}
-                  className="bg-slate-900 border-2 border-slate-800 text-slate-100 rounded-3xl font-bold text-xl hover:bg-red-950/20 hover:border-red-900 transition-all"
+                  className="bg-slate-900 border-2 border-slate-800 text-slate-100 rounded-3xl font-bold text-xl hover:bg-slate-800 transition-all active:scale-95"
                 >
                   False
                 </button>
                 <button 
                   onClick={() => handleNext('true')}
-                  className="bg-slate-900 border-2 border-slate-800 text-slate-100 rounded-3xl font-bold text-xl hover:bg-emerald-950/20 hover:border-emerald-900 transition-all"
+                  className="bg-slate-900 border-2 border-slate-800 text-slate-100 rounded-3xl font-bold text-xl hover:bg-slate-800 transition-all active:scale-95"
                 >
                   True
                 </button>

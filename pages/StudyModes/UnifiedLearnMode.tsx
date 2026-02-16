@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import { DataStore } from '../../store';
-import { CardEntity, LearnMode } from '../../types';
+import { CardEntity, LearnMode, StudyStatus } from '../../types';
 import { ChevronLeft, Check, X, ArrowRight, Sparkles } from 'lucide-react';
 
 type TaskType = 'TF' | 'MCQ' | 'TYPE';
@@ -22,7 +21,24 @@ export const UnifiedLearnMode: React.FC<{ setId: string, mode?: LearnMode, onExi
   const [score, setScore] = useState(0);
 
   useEffect(() => {
-    const allCards = DataStore.getCards().filter(c => c.setId === setId).sort(() => Math.random() - 0.5);
+    const allCardsInSet = DataStore.getCards().filter(c => c.setId === setId);
+    const studyStates = DataStore.getStudyStates().filter(s => s.setId === setId);
+    
+    // Identify cards that are not yet learned
+    const unlearnedCardIds = studyStates
+      .filter(s => s.status === StudyStatus.NOT_LEARNED)
+      .map(s => s.cardId);
+      
+    let targetCards = allCardsInSet.filter(c => unlearnedCardIds.includes(c.id));
+    
+    // If all cards are learned, or none are found in unlearned list, use the full set
+    const isReviewingAll = targetCards.length === 0;
+    if (isReviewingAll) {
+      targetCards = [...allCardsInSet];
+    }
+    
+    // Shuffle the cards we are going to study
+    targetCards.sort(() => Math.random() - 0.5);
     
     // Determine which task types are allowed for this session
     const allowedTypes: TaskType[] = [];
@@ -31,7 +47,7 @@ export const UnifiedLearnMode: React.FC<{ setId: string, mode?: LearnMode, onExi
     else if (mode === 'TYPE') allowedTypes.push('TYPE');
     else allowedTypes.push('TF', 'MCQ', 'TYPE');
 
-    const generatedTasks: Task[] = allCards.map((card, idx) => {
+    const generatedTasks: Task[] = targetCards.map((card, idx) => {
       // Pick type from allowed list
       const type = allowedTypes[idx % allowedTypes.length];
       
@@ -39,14 +55,18 @@ export const UnifiedLearnMode: React.FC<{ setId: string, mode?: LearnMode, onExi
       if (type === 'TF') {
         const isTrue = Math.random() > 0.5;
         let displayedBack = card.back;
-        if (!isTrue && allCards.length > 1) {
+        if (!isTrue && allCardsInSet.length > 1) {
           let other;
-          do { other = allCards[Math.floor(Math.random() * allCards.length)]; } while (other.id === card.id);
+          // Use the full set pool to pick a distractor for True/False
+          do { 
+            other = allCardsInSet[Math.floor(Math.random() * allCardsInSet.length)]; 
+          } while (other.id === card.id);
           displayedBack = other.back;
         }
         question = { back: displayedBack, isTrue: displayedBack === card.back };
       } else if (type === 'MCQ') {
-        const distractors = allCards.filter(c => c.id !== card.id).sort(() => Math.random() - 0.5).slice(0, 3);
+        // Use the full set pool to pick distractors for MCQ
+        const distractors = allCardsInSet.filter(c => c.id !== card.id).sort(() => Math.random() - 0.5).slice(0, 3);
         const options = [
           { id: card.id, back: card.back, isCorrect: true },
           ...distractors.map(d => ({ id: d.id, back: d.back, isCorrect: false }))
@@ -102,7 +122,7 @@ export const UnifiedLearnMode: React.FC<{ setId: string, mode?: LearnMode, onExi
           <p className="text-slate-400 mt-2">You're making great progress.</p>
         </div>
         <div className="text-7xl font-black text-amber-500 drop-shadow-[0_0_15px_rgba(251,198,4,0.3)]">
-            {Math.round((score / tasks.length) * 100)}%
+            {tasks.length > 0 ? Math.round((score / tasks.length) * 100) : 0}%
         </div>
         <div className="text-slate-500 font-bold uppercase tracking-widest">
             {score} / {tasks.length} correctly answered
@@ -118,7 +138,14 @@ export const UnifiedLearnMode: React.FC<{ setId: string, mode?: LearnMode, onExi
   }
 
   const current = tasks[currentIndex];
-  if (!current) return null;
+  if (!current) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 text-slate-500 space-y-4">
+        <p className="font-medium">No cards available for this session.</p>
+        <button onClick={onExit} className="px-6 py-2 bg-slate-900 rounded-xl text-accent font-bold">Go Back</button>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-2xl mx-auto space-y-8 py-8 animate-in slide-in-from-bottom duration-300">
@@ -156,13 +183,13 @@ export const UnifiedLearnMode: React.FC<{ setId: string, mode?: LearnMode, onExi
         <div className="grid grid-cols-2 gap-6">
           <button 
             onClick={() => handleAnswer(!current.question.isTrue)}
-            className="py-6 bg-slate-900 border-2 border-slate-800 text-red-500 rounded-2xl text-2xl font-black hover:bg-red-950/20 hover:border-red-900 transition-all active:scale-95 shadow-lg"
+            className="py-6 bg-slate-900 border-2 border-slate-800 text-slate-200 rounded-2xl text-2xl font-black hover:bg-slate-800 hover:border-slate-700 transition-all active:scale-95 shadow-lg"
           >
             FALSE
           </button>
           <button 
             onClick={() => handleAnswer(current.question.isTrue)}
-            className="py-6 bg-slate-900 border-2 border-slate-800 text-emerald-500 rounded-2xl text-2xl font-black hover:bg-emerald-950/20 hover:border-emerald-900 transition-all active:scale-95 shadow-lg"
+            className="py-6 bg-slate-900 border-2 border-slate-800 text-slate-200 rounded-2xl text-2xl font-black hover:bg-slate-800 hover:border-slate-700 transition-all active:scale-95 shadow-lg"
           >
             TRUE
           </button>

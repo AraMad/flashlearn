@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { DataStore } from '../../store';
 import { CardEntity } from '../../types';
@@ -176,7 +175,7 @@ export const MatchMode: React.FC<{ setId: string, onExit: () => void }> = ({ set
         <div className="w-8" />
       </div>
 
-      <div className="flex-1 grid grid-cols-3 md:grid-cols-4 grid-rows-4 md:grid-rows-3 gap-1.5 sm:gap-3 md:gap-4 h-full pb-4">
+      <div className="flex-1 grid grid-cols-3 md:grid-cols-4 gap-2 sm:gap-4 justify-items-center auto-rows-min overflow-y-auto pb-10 px-1">
         {tiles.map(tile => {
           const isSelected = selected?.id === tile.id;
           const isMismatched = mismatchedIds.includes(tile.id);
@@ -185,14 +184,14 @@ export const MatchMode: React.FC<{ setId: string, onExit: () => void }> = ({ set
             <button
               key={tile.id}
               onClick={() => handleTileClick(tile)}
-              className={`relative h-full w-full p-1.5 sm:p-3 md:p-4 rounded-xl md:rounded-2xl transition-all transform flex items-center justify-center text-center shadow-sm border-2 overflow-hidden ${
+              className={`relative aspect-square w-full p-1 sm:p-2 rounded-xl sm:rounded-2xl transition-all transform flex items-center justify-center text-center shadow-sm border-2 overflow-hidden ${
                 tile.isMatched ? 'opacity-0 scale-75 pointer-events-none' :
                 isMismatched ? 'bg-red-500 border-red-500 text-white animate-shake' :
                 isSelected ? 'bg-amber-500 border-amber-500 text-slate-950 scale-105 shadow-[0_0_20px_rgba(251,198,4,0.3)] z-10' :
-                'bg-slate-900 border-slate-800 text-slate-300 hover:border-amber-500 hover:bg-slate-800 active:scale-95'
+                'bg-slate-900 border-slate-800 text-white hover:border-amber-500 hover:bg-slate-800 active:scale-95'
               }`}
             >
-              <span className="text-xs xs:text-sm sm:text-base md:text-xl font-bold leading-tight line-clamp-4 break-words hyphens-auto">
+              <span className="text-[10px] xs:text-xs sm:text-sm md:text-lg font-bold leading-tight line-clamp-4 break-words hyphens-auto w-full">
                 {tile.text}
               </span>
             </button>

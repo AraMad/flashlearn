@@ -1,13 +1,14 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { DataStore } from '../store';
-import { Plus, Trash2, Save, X, FileText, LayoutList, Tag } from 'lucide-react';
+import { Plus, Trash2, X, FileText, LayoutList, Tag, AlertCircle } from 'lucide-react';
 
 interface SetEditorProps {
   setId?: string;
   onCancel: () => void;
   onSave: (id: string) => void;
 }
+
+const MAX_CARDS = 50;
 
 export const SetEditor: React.FC<SetEditorProps> = ({ setId, onCancel, onSave }) => {
   const [title, setTitle] = useState('');
@@ -35,7 +36,11 @@ export const SetEditor: React.FC<SetEditorProps> = ({ setId, onCancel, onSave })
     }
   }, [setId]);
 
-  const addCard = () => setCards([...cards, { front: '', back: '' }]);
+  const addCard = () => {
+    if (cards.length < MAX_CARDS) {
+      setCards([...cards, { front: '', back: '' }]);
+    }
+  };
 
   const updateCard = (index: number, field: 'front' | 'back', value: string) => {
     const newCards = [...cards];
@@ -102,13 +107,30 @@ export const SetEditor: React.FC<SetEditorProps> = ({ setId, onCancel, onSave })
     });
 
     if (newParsedCards.length > 0) {
-      setCards([...cards.filter(c => c.front || c.back), ...newParsedCards]);
+      const existingCardsWithContent = cards.filter(c => c.front.trim() || c.back.trim());
+      const remainingSlots = MAX_CARDS - existingCardsWithContent.length;
+      
+      if (remainingSlots <= 0) {
+        alert(`Set limit of ${MAX_CARDS} cards reached. Cannot add more.`);
+        setIsBulkImport(false);
+        setBulkText('');
+        return;
+      }
+
+      const cardsToAdd = newParsedCards.slice(0, remainingSlots);
+      setCards([...existingCardsWithContent, ...cardsToAdd]);
+      
+      if (cardsToAdd.length < newParsedCards.length) {
+        alert(`Limit reached. Added ${cardsToAdd.length} cards out of ${newParsedCards.length} provided.`);
+      }
+
       setIsBulkImport(false);
       setBulkText('');
     }
   };
 
   const isSaveDisabled = !title.trim() || cards.filter(c => c.front.trim() && c.back.trim()).length === 0;
+  const isLimitReached = cards.length >= MAX_CARDS;
 
   return (
     <div className="space-y-8 pb-20 animate-in slide-in-from-bottom duration-300">
@@ -124,14 +146,13 @@ export const SetEditor: React.FC<SetEditorProps> = ({ setId, onCancel, onSave })
           <button 
             onClick={handleSave}
             disabled={isSaveDisabled}
-            className={`flex items-center gap-2 px-6 py-2 rounded-xl font-bold transition-all shadow-lg ${
+            className={`px-8 py-2 rounded-xl font-bold transition-all shadow-lg ${
               isSaveDisabled 
               ? 'bg-slate-900 text-slate-600 cursor-not-allowed shadow-none border border-slate-800' 
               : 'bg-accent text-slate-950 hover:bg-accent-hover active:scale-95 shadow-accent/20'
             }`}
           >
-            <Save size={20} />
-            Save Set
+            Save
           </button>
         </div>
       </div>
@@ -205,14 +226,23 @@ export const SetEditor: React.FC<SetEditorProps> = ({ setId, onCancel, onSave })
       </div>
 
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <h3 className="text-xl font-bold text-slate-100 flex items-center gap-2">
-          <LayoutList size={24} className="text-accent" />
-          Flashcards ({cards.length})
-        </h3>
+        <div className="flex items-center gap-4">
+          <h3 className="text-xl font-bold text-slate-100 flex items-center gap-2">
+            <LayoutList size={24} className="text-accent" />
+            Flashcards ({cards.length}/{MAX_CARDS})
+          </h3>
+          {isLimitReached && (
+            <div className="flex items-center gap-1.5 px-3 py-1 bg-red-950/20 border border-red-900/50 rounded-full text-red-400 text-[10px] font-black uppercase tracking-widest animate-pulse">
+              <AlertCircle size={12} />
+              Limit Reached
+            </div>
+          )}
+        </div>
         <div className="flex gap-4">
           <button 
             onClick={() => setIsBulkImport(true)}
-            className="flex items-center gap-2 text-sm text-slate-400 font-bold hover:text-slate-200 transition-colors"
+            disabled={isLimitReached}
+            className={`flex items-center gap-2 text-sm font-bold transition-colors ${isLimitReached ? 'text-slate-700 cursor-not-allowed' : 'text-slate-400 hover:text-slate-200'}`}
           >
             <FileText size={18} />
             Bulk Import
@@ -258,10 +288,15 @@ export const SetEditor: React.FC<SetEditorProps> = ({ setId, onCancel, onSave })
 
       <button 
         onClick={addCard}
-        className="w-full py-10 bg-slate-900/50 border-2 border-dashed border-slate-800 rounded-2xl text-slate-500 font-bold hover:border-accent/40 hover:text-accent transition-all flex flex-col items-center justify-center gap-2"
+        disabled={isLimitReached}
+        className={`w-full py-10 rounded-2xl font-bold transition-all flex flex-col items-center justify-center gap-2 ${
+          isLimitReached 
+          ? 'bg-slate-900/30 border-slate-900 text-slate-700 cursor-not-allowed border-2 border-dashed' 
+          : 'bg-slate-900/50 border-2 border-dashed border-slate-800 text-slate-500 hover:border-accent/40 hover:text-accent'
+        }`}
       >
         <Plus size={32} />
-        Add another card
+        {isLimitReached ? `Set limit reached (${MAX_CARDS} cards)` : 'Add another card'}
       </button>
 
       {/* Bulk Import Modal */}
@@ -276,7 +311,8 @@ export const SetEditor: React.FC<SetEditorProps> = ({ setId, onCancel, onSave })
             </div>
             <div className="p-6 space-y-4">
               <p className="text-sm text-slate-300 bg-accent-light p-4 rounded-xl border border-accent-border">
-                Paste your data below. Use <strong>-</strong>, <strong>;</strong>, or <strong>,</strong> to separate front and back. Each new card should be on a new line.
+                Paste your data below. Use <strong>-</strong>, <strong>;</strong>, or <strong>,</strong> to separate front and back. Each new card should be on a new line. 
+                <br /><span className="text-accent font-bold mt-1 block">Maximum {MAX_CARDS} cards per set.</span>
               </p>
               <textarea 
                 rows={10}
