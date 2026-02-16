@@ -1,3 +1,4 @@
+
 {
   "name": "flashlearn",
   "private": true,
@@ -6,7 +7,7 @@
   "main": "index.tsx",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && cp manifest.json sw.js dist/",
     "preview": "vite preview"
   },
   "dependencies": {
