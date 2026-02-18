@@ -1,4 +1,3 @@
-
 export enum StudyStatus {
   LEARNED = 'learned',
   NOT_LEARNED = 'not_learned'
@@ -13,6 +12,9 @@ export interface SetEntity {
   isFavorite: boolean;
   isDownloaded: boolean;
   tags: string[];
+  isRandomSet?: boolean;
+  sourceTags?: string[];
+  sourceCount?: number;
 }
 
 export interface CardEntity {

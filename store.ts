@@ -77,10 +77,8 @@ export class DataStore {
     const lastBackup = this.getBackupInfo()?.timestamp || 0;
     const lastMutation = this.safeParse<number>(STORAGE_KEYS.LAST_MUTATION, 0);
     
-    // No changes since last backup
     if (lastMutation <= lastBackup) return false;
     
-    // Check if it's been more than 7 days since last backup
     const sevenDaysInMs = 7 * 24 * 60 * 60 * 1000;
     return (Date.now() - lastBackup) > sevenDaysInMs;
   }
@@ -90,7 +88,7 @@ export class DataStore {
   }
 
   static getAllTags(): string[] {
-    const sets = this.getSets();
+    const sets = this.getSets().filter(s => !s.isRandomSet);
     const tags = new Set<string>();
     sets.forEach(s => s.tags?.forEach(t => tags.add(t)));
     return Array.from(tags).sort();
@@ -210,6 +208,132 @@ export class DataStore {
     return setId;
   }
 
+  static createRandomSet(tags: string[], count: number = 50) {
+    const allSets = this.getSets();
+    const sourceSets = allSets.filter(s => {
+      if (s.isRandomSet) return false;
+      // If no tags selected, use all available sets
+      if (tags.length === 0) return true;
+      
+      const hasNoTags = !s.tags || s.tags.length === 0;
+      if (hasNoTags && tags.includes('no-tag')) return true;
+      return s.tags.some(t => tags.includes(t));
+    });
+    
+    const sourceSetIds = sourceSets.map(s => s.id);
+    const allCards = this.getCards();
+    const matchingCards = allCards.filter(c => sourceSetIds.includes(c.setId));
+    
+    // Pick requested number of random cards
+    const randomCards = matchingCards
+      .sort(() => Math.random() - 0.5)
+      .slice(0, count)
+      .map(c => ({ front: c.front, back: c.back }));
+
+    if (randomCards.length === 0) return null;
+
+    const setId = crypto.randomUUID();
+    const now = Date.now();
+    
+    const newSet: SetEntity = {
+      id: setId,
+      title: "Random Set",
+      description: tags.length === 0 ? "Generated from all your cards" : `Generated from: ${tags.join(', ')}`,
+      createdAt: now,
+      updatedAt: now,
+      isFavorite: false,
+      isDownloaded: false,
+      tags: ["Random"],
+      isRandomSet: true,
+      sourceTags: tags,
+      sourceCount: count
+    };
+
+    const newCards: CardEntity[] = randomCards.map((c, i) => ({
+      id: crypto.randomUUID(),
+      setId,
+      front: c.front,
+      back: c.back,
+      orderIndex: i
+    }));
+
+    const newStates: StudyStateEntity[] = newCards.map(c => ({
+      cardId: c.id,
+      setId,
+      status: StudyStatus.NOT_LEARNED,
+      correctCount: 0,
+      wrongCount: 0
+    }));
+
+    this.saveSets([...this.getSets(), newSet]);
+    this.saveCards([...this.getCards(), ...newCards]);
+    this.saveStudyStates([...this.getStudyStates(), ...newStates]);
+    this.recordMutation();
+    return setId;
+  }
+
+  static regenerateRandomSet(setId: string, newTags?: string[], newCount?: number) {
+    const sets = this.getSets();
+    const setIndex = sets.findIndex(s => s.id === setId);
+    if (setIndex === -1) return;
+    
+    const set = sets[setIndex];
+    if (!set || !set.isRandomSet || set.sourceTags === undefined) return;
+
+    if (newTags !== undefined) set.sourceTags = newTags;
+    if (newCount !== undefined) set.sourceCount = newCount;
+    
+    const tags = set.sourceTags;
+    const count = set.sourceCount || 50;
+    
+    const sourceSets = sets.filter(s => {
+      if (s.isRandomSet) return false;
+      if (tags.length === 0) return true;
+      const hasNoTags = !s.tags || s.tags.length === 0;
+      if (hasNoTags && tags.includes('no-tag')) return true;
+      return s.tags.some(t => tags.includes(t));
+    });
+
+    const sourceSetIds = sourceSets.map(s => s.id);
+    const allCards = this.getCards();
+    const matchingCards = allCards.filter(c => sourceSetIds.includes(c.setId));
+    
+    const randomCards = matchingCards
+      .sort(() => Math.random() - 0.5)
+      .slice(0, count)
+      .map(c => ({ front: c.front, back: c.back }));
+
+    if (randomCards.length === 0) return;
+
+    // Remove existing cards and states for this set
+    const otherCards = allCards.filter(c => c.setId !== setId);
+    const otherStates = this.getStudyStates().filter(s => s.setId !== setId);
+
+    const newCards: CardEntity[] = randomCards.map((c, i) => ({
+      id: crypto.randomUUID(),
+      setId,
+      front: c.front,
+      back: c.back,
+      orderIndex: i
+    }));
+
+    const newStates: StudyStateEntity[] = newCards.map(c => ({
+      cardId: c.id,
+      setId,
+      status: StudyStatus.NOT_LEARNED,
+      correctCount: 0,
+      wrongCount: 0
+    }));
+
+    set.updatedAt = Date.now();
+    set.description = tags.length === 0 ? "Generated from all your cards" : `Generated from: ${tags.join(', ')}`;
+    
+    this.saveSets(sets);
+    this.saveCards([...otherCards, ...newCards]);
+    this.saveStudyStates([...otherStates, ...newStates]);
+    this.recordMutation();
+  }
+
   static updateSetTags(setId: string, tags: string[]) {
     const sets = this.getSets();
     const idx = sets.findIndex(s => s.id === setId);
@@ -272,9 +396,18 @@ export class DataStore {
       signature: BACKUP_SIGNATURE,
       version: 1,
       data: {
-        sets: this.getSets(),
-        cards: this.getCards(),
-        states: this.getStudyStates()
+        // EXCLUDE RANDOM SETS FROM BACKUP
+        sets: this.getSets().filter(s => !s.isRandomSet),
+        cards: this.getCards().filter(c => {
+          const sets = this.getSets();
+          const parentSet = sets.find(s => s.id === c.setId);
+          return parentSet && !parentSet.isRandomSet;
+        }),
+        states: this.getStudyStates().filter(s => {
+           const sets = this.getSets();
+           const parentSet = sets.find(set => set.id === s.setId);
+           return parentSet && !parentSet.isRandomSet;
+        })
       },
       exportedAt: Date.now()
     };
@@ -307,7 +440,6 @@ export class DataStore {
       this.saveSets(payload.data.sets);
       this.saveCards(payload.data.cards);
       this.saveStudyStates(payload.data.states);
-      // After import, we consider it "backed up" or at least synced
       this.safeSave(STORAGE_KEYS.BACKUP_INFO, {
         timestamp: Date.now(),
         filename: 'Imported from file'
