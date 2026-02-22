@@ -11,41 +11,11 @@ import { TestMode } from './pages/StudyModes/TestMode';
 import { Sidebar } from './components/Sidebar';
 import { LearnMode } from './types';
 import { DataStore } from './store';
-import { Plus, Settings as SettingsIcon } from 'lucide-react';
+import { Plus, Settings as SettingsIcon, BookOpen } from 'lucide-react';
 
-type Screen = 'library' | 'details' | 'editor' | 'study' | 'settings';
+type Screen = 'library' | 'details' | 'editor' | 'study' | 'settings' | 'my-terms';
 
 const App: React.FC = () => {
-  const [currentScreen, setCurrentScreen] = useState<Screen>('library');
-  const [activeSetId, setActiveSetId] = useState<string | null>(null);
-  const [activeStudyMode, setActiveStudyMode] = useState<LearnMode | null>(null);
-
-  // Initialize data persistence on mount
-  useEffect(() => {
-    DataStore.initialize();
-  }, []);
-
-  const navigateToLibrary = () => {
-    setCurrentScreen('library');
-    setActiveSetId(null);
-    setActiveStudyMode(null);
-  };
-
-  const navigateToDetails = (id: string) => {
-    setActiveSetId(id);
-    setCurrentScreen('details');
-  };
-
-  const navigateToEditor = (id?: string) => {
-    setActiveSetId(id || null);
-    setCurrentScreen('editor');
-  };
-
-  const navigateToSettings = () => {
-    setCurrentScreen('settings');
-    setActiveSetId(null);
-  };
-
   const startStudy = (id: string, mode: LearnMode) => {
     setActiveSetId(id);
     setActiveStudyMode(mode);
@@ -58,6 +28,7 @@ const App: React.FC = () => {
     <div className="flex min-h-screen bg-slate-950 text-slate-50">
       <Sidebar 
         onNavigate={navigateToLibrary} 
+        onNavigateMyTerms={navigateToMyTerms}
         onAddSet={() => navigateToEditor()} 
         onNavigateSettings={navigateToSettings}
       />
@@ -77,16 +48,28 @@ const App: React.FC = () => {
               <h1 className="text-lg font-bold text-slate-100 tracking-tight">FlashLearn</h1>
             </div>
             
-            <button 
-              onClick={navigateToSettings}
-              className={`p-2 rounded-xl border transition-all ${
-                currentScreen === 'settings' 
-                ? 'bg-accent text-slate-950 border-accent shadow-lg shadow-accent/40' 
-                : 'bg-slate-900 text-slate-400 border-slate-800 active:bg-slate-800'
-              }`}
-            >
-              <SettingsIcon size={20} />
-            </button>
+            <div className="flex gap-2">
+              <button 
+                onClick={navigateToMyTerms}
+                className={`p-2 rounded-xl border transition-all ${
+                  currentScreen === 'my-terms' 
+                  ? 'bg-accent text-slate-950 border-accent shadow-lg shadow-accent/40' 
+                  : 'bg-slate-900 text-slate-400 border-slate-800 active:bg-slate-800'
+                }`}
+              >
+                <BookOpen size={20} />
+              </button>
+              <button 
+                onClick={navigateToSettings}
+                className={`p-2 rounded-xl border transition-all ${
+                  currentScreen === 'settings' 
+                  ? 'bg-accent text-slate-950 border-accent shadow-lg shadow-accent/40' 
+                  : 'bg-slate-900 text-slate-400 border-slate-800 active:bg-slate-800'
+                }`}
+              >
+                <SettingsIcon size={20} />
+              </button>
+            </div>
           </div>
         )}
 
@@ -126,6 +109,10 @@ const App: React.FC = () => {
 
           {currentScreen === 'settings' && (
             <Settings onBack={navigateToLibrary} />
+          )}
+
+          {currentScreen === 'my-terms' && (
+            <MyTerms />
           )}
         </div>
 

@@ -138,16 +138,16 @@ export const MatchMode: React.FC<{ setId: string, onExit: () => void }> = ({ set
 
         <div className="flex flex-col sm:flex-row gap-4 w-full max-w-md pt-4">
           <button 
-            onClick={initGame}
+            onClick={onExit} 
             className="flex-1 py-4 bg-slate-900 text-slate-100 border border-slate-800 rounded-2xl font-bold flex items-center justify-center gap-3 hover:bg-slate-800 active:scale-95 transition-all"
           >
-            <RotateCcw size={20} /> Retake
+            Finish
           </button>
           <button 
-            onClick={onExit} 
-            className="flex-1 py-4 bg-amber-500 text-slate-950 font-bold rounded-2xl hover:bg-amber-600 transition-all shadow-xl shadow-amber-900/20 active:scale-95"
+            onClick={initGame}
+            className="flex-1 py-4 bg-amber-500 text-slate-950 font-bold rounded-2xl hover:bg-amber-600 transition-all shadow-xl shadow-amber-900/20 active:scale-95 flex items-center justify-center gap-3"
           >
-            Finish
+            <RotateCcw size={20} /> Retake
           </button>
         </div>
       </div>
@@ -191,7 +191,7 @@ export const MatchMode: React.FC<{ setId: string, onExit: () => void }> = ({ set
                 'bg-slate-900 border-slate-800 text-white hover:border-amber-500 hover:bg-slate-800 active:scale-95'
               }`}
             >
-              <span className="text-[10px] xs:text-xs sm:text-sm md:text-lg font-bold leading-tight line-clamp-4 break-words hyphens-auto w-full">
+              <span className="text-xs xs:text-sm sm:text-base md:text-xl font-bold leading-tight line-clamp-4 break-words hyphens-auto w-full">
                 {tile.text}
               </span>
             </button>

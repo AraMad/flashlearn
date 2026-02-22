@@ -9,16 +9,21 @@ interface Task {
   card: CardEntity;
   type: TaskType;
   question: any;
+  validBacks: string[];
 }
 
 export const UnifiedLearnMode: React.FC<{ setId: string, mode?: LearnMode, onExit: () => void }> = ({ setId, mode, onExit }) => {
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [blocks, setBlocks] = useState<Task[][]>([]);
+  const [currentBlockIndex, setCurrentBlockIndex] = useState(0);
+  const [currentTaskIndex, setCurrentTaskIndex] = useState(0);
+  
   const [feedback, setFeedback] = useState<'correct' | 'wrong' | null>(null);
   const [input, setInput] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [isFinished, setIsFinished] = useState(false);
+  const [isBlockFinished, setIsBlockFinished] = useState(false);
   const [score, setScore] = useState(0);
+  const [totalTasks, setTotalTasks] = useState(0);
 
   useEffect(() => {
     const allCardsInSet = DataStore.getCards().filter(c => c.setId === setId);
@@ -47,37 +52,157 @@ export const UnifiedLearnMode: React.FC<{ setId: string, mode?: LearnMode, onExi
     else if (mode === 'TYPE') allowedTypes.push('TYPE');
     else allowedTypes.push('TF', 'MCQ', 'TYPE');
 
-    const generatedTasks: Task[] = targetCards.map((card, idx) => {
-      // Pick type from allowed list
-      const type = allowedTypes[idx % allowedTypes.length];
-      
-      let question: any = {};
-      if (type === 'TF') {
-        const isTrue = Math.random() > 0.5;
-        let displayedBack = card.back;
-        if (!isTrue && allCardsInSet.length > 1) {
-          let other;
-          // Use the full set pool to pick a distractor for True/False
-          do { 
-            other = allCardsInSet[Math.floor(Math.random() * allCardsInSet.length)]; 
-          } while (other.id === card.id);
-          displayedBack = other.back;
+    const allGeneratedTasks: Task[] = [];
+    
+    targetCards.forEach(card => {
+      const validBacks = allCardsInSet
+        .filter(c => c.front === card.front)
+        .map(c => c.back);
+
+      allowedTypes.forEach(type => {
+        let question: any = {};
+        if (type === 'TF') {
+          const isTrue = Math.random() > 0.5;
+          let displayedBack = card.back;
+          
+          if (!isTrue && allCardsInSet.length > 1) {
+            const potentialDistractors = allCardsInSet.filter(c => !validBacks.includes(c.back));
+            if (potentialDistractors.length > 0) {
+               const other = potentialDistractors[Math.floor(Math.random() * potentialDistractors.length)];
+               displayedBack = other.back;
+            } else {
+               displayedBack = card.back;
+            }
+          }
+          question = { back: displayedBack, isTrue: validBacks.includes(displayedBack) };
+        } else if (type === 'MCQ') {
+          const potentialDistractors = allCardsInSet.filter(c => !validBacks.includes(c.back));
+          const distractors = potentialDistractors.sort(() => Math.random() - 0.5).slice(0, 3);
+          const options = [
+            { id: card.id, back: card.back, isCorrect: true },
+            ...distractors.map(d => ({ id: d.id, back: d.back, isCorrect: false }))
+          ].sort(() => Math.random() - 0.5);
+          
+          const uniqueOptions = [];
+          const seenBacks = new Set();
+          for (const opt of options) {
+              if (!seenBacks.has(opt.back)) {
+                  seenBacks.add(opt.back);
+                  uniqueOptions.push(opt);
+              }
+          }
+          question = { options: uniqueOptions };
         }
-        question = { back: displayedBack, isTrue: displayedBack === card.back };
-      } else if (type === 'MCQ') {
-        // Use the full set pool to pick distractors for MCQ
-        const distractors = allCardsInSet.filter(c => c.id !== card.id).sort(() => Math.random() - 0.5).slice(0, 3);
-        const options = [
-          { id: card.id, back: card.back, isCorrect: true },
-          ...distractors.map(d => ({ id: d.id, back: d.back, isCorrect: false }))
-        ].sort(() => Math.random() - 0.5);
-        question = { options };
-      }
-      
-      return { card, type, question };
+        
+        allGeneratedTasks.push({ card, type, question, validBacks });
+      });
     });
 
-    setTasks(generatedTasks);
+    // --- Block Generation Logic ---
+    const BLOCK_SIZE = 5;
+    let finalBlocks: Task[][] = [];
+
+    const typeTasks = allGeneratedTasks.filter(t => t.type === 'TYPE');
+    const otherTasks = allGeneratedTasks.filter(t => t.type !== 'TYPE');
+
+    // Shuffle pools to ensure random distribution across blocks
+    typeTasks.sort(() => Math.random() - 0.5);
+    otherTasks.sort(() => Math.random() - 0.5);
+
+    if (typeTasks.length > 0 && otherTasks.length > 0) {
+        // We want to form blocks of ~5 for the late phase, containing TYPE tasks.
+        // Each block should have at least 1 non-TYPE task.
+        // Capacity for TYPE per block is 4.
+        const numLateBlocks = Math.ceil(typeTasks.length / 4);
+        
+        // Reserve non-type tasks (1 per late block)
+        const reservedOtherTasks = otherTasks.splice(0, Math.min(otherTasks.length, numLateBlocks));
+        
+        // Create Late Blocks
+        const lateBlocks: Task[][] = [];
+        let typeIdx = 0;
+        
+        for (let i = 0; i < numLateBlocks; i++) {
+            const block: Task[] = [];
+            // Add 1 reserved non-type task if available
+            if (i < reservedOtherTasks.length) {
+                block.push(reservedOtherTasks[i]);
+            }
+            // Fill with type tasks (up to 4, or until full/empty)
+            let addedType = 0;
+            while (addedType < 4 && typeIdx < typeTasks.length) {
+                block.push(typeTasks[typeIdx++]);
+                addedType++;
+            }
+            lateBlocks.push(block);
+        }
+
+        // Create Early Blocks from remaining otherTasks
+        const earlyBlocks: Task[][] = [];
+        while (otherTasks.length > 0) {
+            earlyBlocks.push(otherTasks.splice(0, BLOCK_SIZE));
+        }
+
+        // Handle transition: if last early block is small, merge into first late block
+        if (earlyBlocks.length > 0 && earlyBlocks[earlyBlocks.length - 1].length < BLOCK_SIZE) {
+            const smallBlock = earlyBlocks.pop()!;
+            if (lateBlocks.length > 0) {
+                lateBlocks[0] = [...smallBlock, ...lateBlocks[0]];
+            } else {
+                earlyBlocks.push(smallBlock);
+            }
+        }
+
+        finalBlocks = [...earlyBlocks, ...lateBlocks];
+    } else {
+        // Just shuffle everything and chunk
+        allGeneratedTasks.sort(() => Math.random() - 0.5);
+        const tasksCopy = [...allGeneratedTasks];
+        while (tasksCopy.length > 0) {
+            finalBlocks.push(tasksCopy.splice(0, BLOCK_SIZE));
+        }
+    }
+
+    // Merge last block if it's too small (and not the only block)
+    if (finalBlocks.length > 1) {
+        const lastBlock = finalBlocks[finalBlocks.length - 1];
+        if (lastBlock.length < BLOCK_SIZE) {
+            const secondLast = finalBlocks[finalBlocks.length - 2];
+            finalBlocks[finalBlocks.length - 2] = [...secondLast, ...lastBlock];
+            finalBlocks.pop();
+        }
+    }
+
+    // Shuffle and fix consecutive duplicates for ALL blocks
+    finalBlocks.forEach(b => {
+        b.sort(() => Math.random() - 0.5);
+        
+        // Attempt to fix consecutive duplicates
+        for (let i = 1; i < b.length; i++) {
+            if (b[i].card.id === b[i-1].card.id) {
+                // Find a swap candidate
+                let swapIdx = -1;
+                for (let j = 0; j < b.length; j++) {
+                    if (j !== i && j !== i-1 && 
+                        b[j].card.id !== b[i].card.id && 
+                        (j === 0 || b[j-1].card.id !== b[i].card.id) &&
+                        (j === b.length - 1 || b[j+1].card.id !== b[i].card.id)) {
+                        swapIdx = j;
+                        break;
+                    }
+                }
+                if (swapIdx !== -1) {
+                    const temp = b[i];
+                    b[i] = b[swapIdx];
+                    b[swapIdx] = temp;
+                }
+            }
+        }
+    });
+
+    setBlocks(finalBlocks);
+    setTotalTasks(finalBlocks.reduce((acc, b) => acc + b.length, 0));
+
   }, [setId, mode]);
 
   const handleAnswer = (isCorrect: boolean, id?: string) => {
@@ -85,7 +210,10 @@ export const UnifiedLearnMode: React.FC<{ setId: string, mode?: LearnMode, onExi
     
     if (id) setSelectedId(id);
     
-    DataStore.updateStudyState(tasks[currentIndex].card.id, isCorrect);
+    const currentBlock = blocks[currentBlockIndex];
+    const currentTask = currentBlock[currentTaskIndex];
+
+    DataStore.updateStudyState(currentTask.card.id, isCorrect);
     setFeedback(isCorrect ? 'correct' : 'wrong');
     if (isCorrect) setScore(s => s + 1);
 
@@ -93,19 +221,33 @@ export const UnifiedLearnMode: React.FC<{ setId: string, mode?: LearnMode, onExi
       setFeedback(null);
       setInput('');
       setSelectedId(null);
-      if (currentIndex < tasks.length - 1) {
-        setCurrentIndex(currentIndex + 1);
+
+      if (currentTaskIndex < currentBlock.length - 1) {
+        setCurrentTaskIndex(currentTaskIndex + 1);
       } else {
-        setIsFinished(true);
+        // Block finished
+        setIsBlockFinished(true);
       }
     }, isCorrect ? 800 : 2000);
+  };
+
+  const handleContinueBlock = () => {
+      setIsBlockFinished(false);
+      if (currentBlockIndex < blocks.length - 1) {
+          setCurrentBlockIndex(currentBlockIndex + 1);
+          setCurrentTaskIndex(0);
+      } else {
+          setIsFinished(true);
+      }
   };
 
   const handleTypeSubmit = (e?: React.FormEvent) => {
     e?.preventDefault();
     if (!input.trim()) return;
-    // Fuzzy matching: ignore case and extra whitespace
-    const isCorrect = input.trim().toLowerCase() === tasks[currentIndex].card.back.trim().toLowerCase();
+    const normalize = (text: string) => text.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const normalizedInput = normalize(input);
+    const currentTask = blocks[currentBlockIndex][currentTaskIndex];
+    const isCorrect = currentTask.validBacks.some(vb => normalize(vb) === normalizedInput);
     handleAnswer(isCorrect);
   };
 
@@ -118,14 +260,14 @@ export const UnifiedLearnMode: React.FC<{ setId: string, mode?: LearnMode, onExi
             </div>
         </div>
         <div>
-          <h2 className="text-4xl font-black text-slate-100">Round Complete!</h2>
-          <p className="text-slate-400 mt-2">You're making great progress.</p>
+          <h2 className="text-4xl font-black text-slate-100">Session Complete!</h2>
+          <p className="text-slate-400 mt-2">You've mastered this session.</p>
         </div>
         <div className="text-7xl font-black text-amber-500 drop-shadow-[0_0_15px_rgba(251,198,4,0.3)]">
-            {tasks.length > 0 ? Math.round((score / tasks.length) * 100) : 0}%
+            {totalTasks > 0 ? Math.round((score / totalTasks) * 100) : 0}%
         </div>
         <div className="text-slate-500 font-bold uppercase tracking-widest">
-            {score} / {tasks.length} correctly answered
+            {score} / {totalTasks} correctly answered
         </div>
         <button 
           onClick={onExit} 
@@ -137,8 +279,26 @@ export const UnifiedLearnMode: React.FC<{ setId: string, mode?: LearnMode, onExi
     );
   }
 
-  const current = tasks[currentIndex];
-  if (!current) {
+  if (isBlockFinished) {
+      return (
+        <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-8 animate-in zoom-in">
+            <div className="bg-emerald-500/20 p-6 rounded-full border border-emerald-500/30 mb-4">
+                <Check size={48} className="text-emerald-500" />
+            </div>
+            <h2 className="text-3xl font-bold text-slate-100">Block Complete!</h2>
+            <p className="text-slate-400 max-w-xs">Take a breath, then continue to the next set of cards.</p>
+            
+            <button 
+                onClick={handleContinueBlock}
+                className="mt-8 px-12 py-4 bg-slate-100 text-slate-950 font-bold rounded-2xl hover:bg-white transition-all shadow-xl active:scale-95 flex items-center gap-2"
+            >
+                Continue <ArrowRight size={20} />
+            </button>
+        </div>
+      );
+  }
+
+  if (blocks.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-slate-500 space-y-4">
         <p className="font-medium">No cards available for this session.</p>
@@ -146,6 +306,9 @@ export const UnifiedLearnMode: React.FC<{ setId: string, mode?: LearnMode, onExi
       </div>
     );
   }
+
+  const currentBlock = blocks[currentBlockIndex];
+  const current = currentBlock[currentTaskIndex];
 
   return (
     <div className="max-w-2xl mx-auto space-y-8 py-8 animate-in slide-in-from-bottom duration-300">
@@ -155,13 +318,23 @@ export const UnifiedLearnMode: React.FC<{ setId: string, mode?: LearnMode, onExi
             <div className="text-[10px] font-black text-amber-500 uppercase tracking-[0.3em] mb-1">
                 {current.type === 'TF' ? 'True or False' : current.type === 'MCQ' ? 'Multiple Choice' : 'Write the answer'}
             </div>
-            <div className="text-xs font-bold text-slate-500">Step {currentIndex + 1} of {tasks.length}</div>
+            <div className="text-xs font-bold text-slate-500">Block {currentBlockIndex + 1} of {blocks.length}</div>
         </div>
         <div className="w-8" />
       </div>
 
-      <div className="w-full h-1 bg-slate-900 rounded-full border border-slate-800">
-          <div className="h-full bg-amber-500 transition-all duration-500" style={{ width: `${(currentIndex / tasks.length) * 100}%` }} />
+      {/* Instagram-style Progress Bar */}
+      <div className="flex gap-1.5 w-full">
+          {currentBlock.map((_, idx) => (
+              <div key={idx} className="h-1.5 flex-1 bg-slate-800 rounded-full overflow-hidden">
+                  <div 
+                    className={`h-full transition-all duration-300 ${
+                        idx < currentTaskIndex ? 'bg-amber-500' : 
+                        idx === currentTaskIndex ? 'bg-amber-500/50' : 'bg-transparent'
+                    }`} 
+                  />
+              </div>
+          ))}
       </div>
 
       <div className="bg-slate-900 p-8 md:p-12 rounded-3xl border border-slate-800 shadow-2xl relative overflow-hidden min-h-[300px] flex flex-col items-center justify-center text-center">
@@ -193,6 +366,13 @@ export const UnifiedLearnMode: React.FC<{ setId: string, mode?: LearnMode, onExi
           >
             TRUE
           </button>
+        </div>
+      )}
+
+      {current.type === 'TF' && feedback === 'wrong' && (
+        <div className="p-5 bg-red-950/30 border border-red-900/50 rounded-2xl animate-in slide-in-from-top-4">
+            <p className="text-[10px] font-black text-red-500 uppercase tracking-widest mb-1">Correct Answer</p>
+            <p className="text-xl font-bold text-slate-100">{current.card.back}</p>
         </div>
       )}
 

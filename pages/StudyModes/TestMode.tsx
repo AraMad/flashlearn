@@ -13,6 +13,7 @@ interface Question {
   type: QuestionType;
   prompt: string;
   correctAnswer: string;
+  validAnswers: string[];
   options?: string[]; // For MCQ
   tfTarget?: string; // For TF
   tfIsCorrect?: boolean;
@@ -56,6 +57,25 @@ export const TestMode: React.FC<{ setId: string, onExit: () => void }> = ({ setI
     }
   }, [setId]);
 
+  useEffect(() => {
+    if (state === 'results' && questions.length > 0) {
+      const score = userAnswers.filter(a => a.isCorrect).length;
+      const percentage = Math.round((score / questions.length) * 100);
+
+      if (percentage > 95) {
+        const currentSummary = DataStore.getSetSummaries().find(s => s.id === setId);
+        
+        if (currentSummary) {
+          const allLearned = currentSummary.cardCount > 0 && currentSummary.learnedCount === currentSummary.cardCount;
+          
+          if (allLearned && !currentSummary.tags.includes('learned')) {
+            DataStore.updateSetTags(setId, [...currentSummary.tags, 'learned']);
+          }
+        }
+      }
+    }
+  }, [state, userAnswers, questions.length, setId]);
+
   const handleStartTest = () => {
     // Generate questions
     const shuffledCards = [...allCards].sort(() => Math.random() - 0.5);
@@ -76,30 +96,59 @@ export const TestMode: React.FC<{ setId: string, onExit: () => void }> = ({ setI
       const prompt = promptSide === 'front' ? card.front : card.back;
       const correctAnswer = promptSide === 'front' ? card.back : card.front;
 
+      // Find all valid answers for this prompt
+      const validAnswers = allCards
+        .filter(c => (promptSide === 'front' ? c.front : c.back) === prompt)
+        .map(c => (promptSide === 'front' ? c.back : c.front));
+
       const q: Question = {
         id: crypto.randomUUID(),
         type,
         prompt,
         correctAnswer,
+        validAnswers,
       };
 
       if (type === 'TF') {
         const isTrue = Math.random() > 0.5;
         let tfTarget = correctAnswer;
+        
         if (!isTrue && allCards.length > 1) {
-          let other;
-          do { other = allCards[Math.floor(Math.random() * allCards.length)]; } while (other.id === card.id);
-          tfTarget = promptSide === 'front' ? other.back : other.front;
+          // Find a distractor that is NOT in validAnswers
+          const potentialDistractors = allCards.filter(c => {
+             const val = promptSide === 'front' ? c.back : c.front;
+             return !validAnswers.includes(val);
+          });
+          
+          if (potentialDistractors.length > 0) {
+             const other = potentialDistractors[Math.floor(Math.random() * potentialDistractors.length)];
+             tfTarget = promptSide === 'front' ? other.back : other.front;
+          } else {
+             // Fallback if no valid distractors (e.g. all cards have same answer)
+             // Force true if we can't make a false
+             tfTarget = correctAnswer;
+          }
         }
+        
         q.tfTarget = tfTarget;
-        q.tfIsCorrect = tfTarget === correctAnswer;
+        // Re-evaluate isCorrect based on the chosen target
+        q.tfIsCorrect = validAnswers.includes(tfTarget);
       } else if (type === 'MCQ') {
-        const others = allCards.filter(c => c.id !== card.id).sort(() => Math.random() - 0.5).slice(0, 3);
+        // Find distractors that are NOT in validAnswers
+        const potentialDistractors = allCards.filter(c => {
+           const val = promptSide === 'front' ? c.back : c.front;
+           return !validAnswers.includes(val);
+        });
+
+        const others = potentialDistractors.sort(() => Math.random() - 0.5).slice(0, 3);
+        
         const options = [
           correctAnswer,
           ...others.map(o => promptSide === 'front' ? o.back : o.front)
         ].sort(() => Math.random() - 0.5);
-        q.options = options;
+        
+        // Ensure unique options
+        q.options = Array.from(new Set(options));
       }
 
       return q;
@@ -125,9 +174,14 @@ export const TestMode: React.FC<{ setId: string, onExit: () => void }> = ({ setI
     let isCorrect = false;
 
     if (q.type === 'TF') {
-        isCorrect = (answer === 'true' && q.tfIsCorrect) || (answer === 'false' && !q.tfIsCorrect);
+        isCorrect = (answer === 'true' && q.tfIsCorrect!) || (answer === 'false' && !q.tfIsCorrect!);
     } else if (q.type === 'MCQ' || q.type === 'WRITTEN') {
-        isCorrect = answer.trim().toLowerCase() === q.correctAnswer.trim().toLowerCase();
+        const normalize = (text: string) => {
+            if (q.type === 'WRITTEN') return text.toLowerCase().replace(/[^a-z0-9]/g, '');
+            return text.trim().toLowerCase();
+        };
+        const normalizedAnswer = normalize(answer);
+        isCorrect = q.validAnswers.some(va => normalize(va) === normalizedAnswer);
     }
 
     const newUserAnswers = [...userAnswers, { questionId: q.id, answer, isCorrect }];
