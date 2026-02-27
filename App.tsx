@@ -4,18 +4,45 @@ import { Library } from './pages/Library';
 import { SetDetails } from './pages/SetDetails';
 import { SetEditor } from './pages/SetEditor';
 import { Settings } from './pages/Settings';
-import { ReviewMode } from './pages/StudyModes/ReviewMode';
-import { UnifiedLearnMode } from './pages/StudyModes/UnifiedLearnMode';
-import { MatchMode } from './pages/StudyModes/MatchMode';
-import { TestMode } from './pages/StudyModes/TestMode';
+import { StudyContainer } from './components/StudyContainer';
 import { Sidebar } from './components/Sidebar';
 import { LearnMode } from './types';
 import { DataStore } from './store';
-import { Plus, Settings as SettingsIcon, BookOpen } from 'lucide-react';
+import { Plus, Settings as SettingsIcon } from 'lucide-react';
 
-type Screen = 'library' | 'details' | 'editor' | 'study' | 'settings' | 'my-terms';
+type Screen = 'library' | 'details' | 'editor' | 'study' | 'settings';
 
 const App: React.FC = () => {
+  const [currentScreen, setCurrentScreen] = useState<Screen>('library');
+  const [activeSetId, setActiveSetId] = useState<string | null>(null);
+  const [activeStudyMode, setActiveStudyMode] = useState<LearnMode | null>(null);
+
+  // Initialize data persistence on mount
+  useEffect(() => {
+    DataStore.initialize();
+  }, []);
+
+  const navigateToLibrary = () => {
+    setCurrentScreen('library');
+    setActiveSetId(null);
+    setActiveStudyMode(null);
+  };
+
+  const navigateToDetails = (id: string) => {
+    setActiveSetId(id);
+    setCurrentScreen('details');
+  };
+
+  const navigateToEditor = (id?: string) => {
+    setActiveSetId(id || null);
+    setCurrentScreen('editor');
+  };
+
+  const navigateToSettings = () => {
+    setCurrentScreen('settings');
+    setActiveSetId(null);
+  };
+
   const startStudy = (id: string, mode: LearnMode) => {
     setActiveSetId(id);
     setActiveStudyMode(mode);
@@ -28,7 +55,6 @@ const App: React.FC = () => {
     <div className="flex min-h-screen bg-slate-950 text-slate-50">
       <Sidebar 
         onNavigate={navigateToLibrary} 
-        onNavigateMyTerms={navigateToMyTerms}
         onAddSet={() => navigateToEditor()} 
         onNavigateSettings={navigateToSettings}
       />
@@ -48,28 +74,16 @@ const App: React.FC = () => {
               <h1 className="text-lg font-bold text-slate-100 tracking-tight">FlashLearn</h1>
             </div>
             
-            <div className="flex gap-2">
-              <button 
-                onClick={navigateToMyTerms}
-                className={`p-2 rounded-xl border transition-all ${
-                  currentScreen === 'my-terms' 
-                  ? 'bg-accent text-slate-950 border-accent shadow-lg shadow-accent/40' 
-                  : 'bg-slate-900 text-slate-400 border-slate-800 active:bg-slate-800'
-                }`}
-              >
-                <BookOpen size={20} />
-              </button>
-              <button 
-                onClick={navigateToSettings}
-                className={`p-2 rounded-xl border transition-all ${
-                  currentScreen === 'settings' 
-                  ? 'bg-accent text-slate-950 border-accent shadow-lg shadow-accent/40' 
-                  : 'bg-slate-900 text-slate-400 border-slate-800 active:bg-slate-800'
-                }`}
-              >
-                <SettingsIcon size={20} />
-              </button>
-            </div>
+            <button 
+              onClick={navigateToSettings}
+              className={`p-2 rounded-xl border transition-all ${
+                currentScreen === 'settings' 
+                ? 'bg-accent text-slate-950 border-accent shadow-lg shadow-accent/40' 
+                : 'bg-slate-900 text-slate-400 border-slate-800 active:bg-slate-800'
+              }`}
+            >
+              <SettingsIcon size={20} />
+            </button>
           </div>
         )}
 
@@ -110,10 +124,6 @@ const App: React.FC = () => {
           {currentScreen === 'settings' && (
             <Settings onBack={navigateToLibrary} />
           )}
-
-          {currentScreen === 'my-terms' && (
-            <MyTerms />
-          )}
         </div>
 
         {/* Mobile FAB */}
@@ -128,19 +138,6 @@ const App: React.FC = () => {
       </main>
     </div>
   );
-};
-
-const StudyContainer: React.FC<{ setId: string, mode: LearnMode, onExit: () => void }> = ({ setId, mode, onExit }) => {
-  switch (mode) {
-    case 'REVIEW': return <ReviewMode setId={setId} onExit={onExit} />;
-    case 'LEARN': return <UnifiedLearnMode setId={setId} onExit={onExit} />;
-    case 'MATCH': return <MatchMode setId={setId} onExit={onExit} />;
-    case 'TEST': return <TestMode setId={setId} onExit={onExit} />;
-    case 'TF':
-    case 'MCQ':
-    case 'TYPE': return <UnifiedLearnMode setId={setId} mode={mode} onExit={onExit} />;
-    default: return <div className="text-center p-10 text-slate-400">Invalid Mode</div>;
-  }
 };
 
 export default App;
