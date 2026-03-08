@@ -405,12 +405,6 @@ export const Library: React.FC<LibraryProps> = ({ onSelectSet, onEditSet, onNavi
         </div>
       )}
 
-      <div className="mt-auto pt-12 pb-4 text-center">
-        <p className="text-[11px] text-slate-600 font-medium tracking-wide">
-          demo AI app by <a href="https://www.starksoft.online/ai-powered-prototyping-service-starksoft" target="_blank" rel="noopener noreferrer" className="text-slate-500 underline decoration-slate-700 hover:text-accent hover:decoration-accent transition-all">StarkSoft</a>
-        </p>
-      </div>
-
       <style>{`
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }

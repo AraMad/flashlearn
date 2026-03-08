@@ -8,6 +8,7 @@ import { MyTerms } from './pages/MyTerms';
 import { StudyContainer } from './components/StudyContainer';
 import { Sidebar } from './components/Sidebar';
 import { MobileMenu } from './components/MobileMenu';
+import { Footer } from './components/Footer';
 import { LearnMode } from './types';
 import { DataStore } from './store';
 import { Plus, Menu } from 'lucide-react';
@@ -142,6 +143,8 @@ const App: React.FC = () => {
           {currentScreen === 'my-terms' && (
             <MyTerms />
           )}
+
+          <Footer />
         </div>
 
         {/* Mobile FAB */}
