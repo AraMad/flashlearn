@@ -4,18 +4,21 @@ import { Library } from './pages/Library';
 import { SetDetails } from './pages/SetDetails';
 import { SetEditor } from './pages/SetEditor';
 import { Settings } from './pages/Settings';
+import { MyTerms } from './pages/MyTerms';
 import { StudyContainer } from './components/StudyContainer';
 import { Sidebar } from './components/Sidebar';
+import { MobileMenu } from './components/MobileMenu';
 import { LearnMode } from './types';
 import { DataStore } from './store';
-import { Plus, Settings as SettingsIcon } from 'lucide-react';
+import { Plus, Menu } from 'lucide-react';
 
-type Screen = 'library' | 'details' | 'editor' | 'study' | 'settings';
+type Screen = 'library' | 'details' | 'editor' | 'study' | 'settings' | 'my-terms';
 
 const App: React.FC = () => {
   const [currentScreen, setCurrentScreen] = useState<Screen>('library');
   const [activeSetId, setActiveSetId] = useState<string | null>(null);
   const [activeStudyMode, setActiveStudyMode] = useState<LearnMode | null>(null);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Initialize data persistence on mount
   useEffect(() => {
@@ -43,6 +46,11 @@ const App: React.FC = () => {
     setActiveSetId(null);
   };
 
+  const navigateToMyTerms = () => {
+    setCurrentScreen('my-terms');
+    setActiveSetId(null);
+  };
+
   const startStudy = (id: string, mode: LearnMode) => {
     setActiveSetId(id);
     setActiveStudyMode(mode);
@@ -55,10 +63,20 @@ const App: React.FC = () => {
     <div className="flex min-h-screen bg-slate-950 text-slate-50">
       <Sidebar 
         onNavigate={navigateToLibrary} 
+        onNavigateMyTerms={navigateToMyTerms}
         onAddSet={() => navigateToEditor()} 
         onNavigateSettings={navigateToSettings}
       />
       
+      <MobileMenu
+        isOpen={isMobileMenuOpen}
+        onClose={() => setIsMobileMenuOpen(false)}
+        onNavigateLibrary={navigateToLibrary}
+        onNavigateMyTerms={navigateToMyTerms}
+        onAddSet={() => navigateToEditor()}
+        onNavigateSettings={navigateToSettings}
+      />
+
       <main className="flex-1 overflow-y-auto pb-24 md:pb-0">
         {/* Mobile Header - Hidden in Study Mode */}
         {!isStudyMode && (
@@ -75,14 +93,10 @@ const App: React.FC = () => {
             </div>
             
             <button 
-              onClick={navigateToSettings}
-              className={`p-2 rounded-xl border transition-all ${
-                currentScreen === 'settings' 
-                ? 'bg-accent text-slate-950 border-accent shadow-lg shadow-accent/40' 
-                : 'bg-slate-900 text-slate-400 border-slate-800 active:bg-slate-800'
-              }`}
+              onClick={() => setIsMobileMenuOpen(true)}
+              className="p-2 rounded-xl bg-slate-900 text-slate-400 border border-slate-800 active:bg-slate-800"
             >
-              <SettingsIcon size={20} />
+              <Menu size={20} />
             </button>
           </div>
         )}
@@ -123,6 +137,10 @@ const App: React.FC = () => {
 
           {currentScreen === 'settings' && (
             <Settings onBack={navigateToLibrary} />
+          )}
+
+          {currentScreen === 'my-terms' && (
+            <MyTerms />
           )}
         </div>
 

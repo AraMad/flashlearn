@@ -3,7 +3,7 @@ import { DataStore } from '../../store';
 import { CardEntity, LearnMode, StudyStatus } from '../../types';
 import { ChevronLeft, Check, X, ArrowRight, Sparkles } from 'lucide-react';
 
-type TaskType = 'TF' | 'MCQ' | 'TYPE';
+type TaskType = 'TF' | 'MCQ' | 'TYPE' | 'SPELL';
 
 interface Task {
   card: CardEntity;
@@ -24,6 +24,9 @@ export const UnifiedLearnMode: React.FC<{ setId: string, mode?: LearnMode, onExi
   const [isBlockFinished, setIsBlockFinished] = useState(false);
   const [score, setScore] = useState(0);
   const [totalTasks, setTotalTasks] = useState(0);
+  const [spellingOptions, setSpellingOptions] = useState<string[]>([]);
+  const [spellingMistakes, setSpellingMistakes] = useState(0);
+  const [wrongButtonIndex, setWrongButtonIndex] = useState<number | null>(null);
 
   useEffect(() => {
     const allCardsInSet = DataStore.getCards().filter(c => c.setId === setId);
@@ -50,7 +53,8 @@ export const UnifiedLearnMode: React.FC<{ setId: string, mode?: LearnMode, onExi
     if (mode === 'TF') allowedTypes.push('TF');
     else if (mode === 'MCQ') allowedTypes.push('MCQ');
     else if (mode === 'TYPE') allowedTypes.push('TYPE');
-    else allowedTypes.push('TF', 'MCQ', 'TYPE');
+    else if (mode === 'SPELL') allowedTypes.push('SPELL');
+    else allowedTypes.push('TF', 'MCQ', 'TYPE', 'SPELL');
 
     const allGeneratedTasks: Task[] = [];
     
@@ -92,6 +96,8 @@ export const UnifiedLearnMode: React.FC<{ setId: string, mode?: LearnMode, onExi
               }
           }
           question = { options: uniqueOptions };
+        } else if (type === 'SPELL') {
+          question = {};
         }
         
         allGeneratedTasks.push({ card, type, question, validBacks });
@@ -221,6 +227,8 @@ export const UnifiedLearnMode: React.FC<{ setId: string, mode?: LearnMode, onExi
       setFeedback(null);
       setInput('');
       setSelectedId(null);
+      setSpellingMistakes(0);
+      setWrongButtonIndex(null);
 
       if (currentTaskIndex < currentBlock.length - 1) {
         setCurrentTaskIndex(currentTaskIndex + 1);
@@ -249,6 +257,70 @@ export const UnifiedLearnMode: React.FC<{ setId: string, mode?: LearnMode, onExi
     const currentTask = blocks[currentBlockIndex][currentTaskIndex];
     const isCorrect = currentTask.validBacks.some(vb => normalize(vb) === normalizedInput);
     handleAnswer(isCorrect);
+  };
+
+  // Spelling Task Logic
+  useEffect(() => {
+    if (blocks.length === 0 || feedback) return;
+    const currentTask = blocks[currentBlockIndex]?.[currentTaskIndex];
+    if (!currentTask || currentTask.type !== 'SPELL') return;
+
+    const targetTerm = currentTask.card.front;
+    const targetUpper = targetTerm.toUpperCase();
+    
+    // Handle auto-fill of non-alphanumeric characters
+    if (input.length < targetUpper.length) {
+        const nextChar = targetUpper[input.length];
+        if (!/[A-Z0-9]/.test(nextChar)) {
+             const newInput = input + nextChar;
+             setInput(newInput);
+             if (newInput.length === targetUpper.length) {
+                 handleAnswer(true);
+             }
+             return;
+        }
+        
+        // Generate options for the needed letter
+        const neededChar = nextChar;
+        const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        const newOptions = [neededChar];
+        
+        while (newOptions.length < 5) {
+            const rand = alphabet[Math.floor(Math.random() * alphabet.length)];
+            if (!newOptions.includes(rand)) {
+                newOptions.push(rand);
+            }
+        }
+        
+        setSpellingOptions(newOptions.sort(() => Math.random() - 0.5));
+    }
+  }, [currentBlockIndex, currentTaskIndex, input, blocks, feedback]);
+
+  const handleSpellingOptionClick = (char: string, idx: number) => {
+    if (feedback) return;
+    const currentTask = blocks[currentBlockIndex][currentTaskIndex];
+    const targetUpper = currentTask.card.front.toUpperCase();
+    const nextIndex = input.length;
+    const expectedChar = targetUpper[nextIndex];
+
+    if (char === expectedChar) {
+        setWrongButtonIndex(null);
+        let newInput = input + char;
+        setInput(newInput);
+
+        if (newInput.length === targetUpper.length) {
+            handleAnswer(true);
+        }
+    } else {
+        setWrongButtonIndex(idx);
+        setTimeout(() => setWrongButtonIndex(null), 500);
+        
+        const newMistakes = spellingMistakes + 1;
+        setSpellingMistakes(newMistakes);
+        if (newMistakes >= 3) {
+            handleAnswer(false);
+        }
+    }
   };
 
   if (isFinished) {
@@ -341,8 +413,8 @@ export const UnifiedLearnMode: React.FC<{ setId: string, mode?: LearnMode, onExi
         {feedback === 'correct' && <div className="absolute inset-0 bg-emerald-500 flex items-center justify-center text-white animate-in fade-in duration-200 z-10"><Check size={80} strokeWidth={4} /></div>}
         {feedback === 'wrong' && <div className="absolute inset-0 bg-red-500 flex items-center justify-center text-white animate-in fade-in duration-200 z-10"><X size={80} strokeWidth={4} /></div>}
 
-        <p className="text-xs font-black text-slate-600 uppercase tracking-widest mb-6">Term</p>
-        <h3 className="text-3xl md:text-5xl font-bold text-slate-100 leading-tight">{current.card.front}</h3>
+        <p className="text-xs font-black text-slate-600 uppercase tracking-widest mb-6">{current.type === 'SPELL' ? 'Definition' : 'Term'}</p>
+        <h3 className="text-3xl md:text-5xl font-bold text-slate-100 leading-tight">{current.type === 'SPELL' ? current.card.back : current.card.front}</h3>
         
         {current.type === 'TF' && (
           <div className="mt-12 space-y-2">
@@ -397,6 +469,59 @@ export const UnifiedLearnMode: React.FC<{ setId: string, mode?: LearnMode, onExi
               </button>
             );
           })}
+        </div>
+      )}
+
+      {current.type === 'SPELL' && (
+        <div className="space-y-8">
+            <div className="flex flex-wrap justify-center gap-2 min-h-[60px]">
+                {current.card.front.split('').map((char, idx) => {
+                    if (char === ' ') {
+                        return <div key={idx} className="w-4 sm:w-6" />;
+                    }
+                    const isRevealed = idx < input.length;
+                    return (
+                        <div key={idx} className={`w-10 h-12 sm:w-12 sm:h-14 flex items-center justify-center text-xl sm:text-2xl font-black rounded-lg border-b-4 transition-all ${
+                            isRevealed 
+                                ? 'bg-slate-800 border-slate-700 text-slate-100' 
+                                : 'bg-slate-900/50 border-slate-800 text-transparent'
+                        }`}>
+                            {isRevealed ? input[idx] : '_'}
+                        </div>
+                    );
+                })}
+            </div>
+            
+            {!feedback && (
+                <div className="flex justify-center gap-3 sm:gap-4">
+                    {spellingOptions.map((char, idx) => (
+                        <button
+                            key={`${char}-${idx}`}
+                            onClick={() => handleSpellingOptionClick(char, idx)}
+                            className={`w-12 h-12 sm:w-16 sm:h-16 border-b-4 rounded-xl text-xl sm:text-2xl font-black transition-all ${
+                                wrongButtonIndex === idx
+                                ? 'bg-red-500 border-red-700 text-white scale-95'
+                                : 'bg-slate-800 border-slate-950 text-slate-100 hover:bg-slate-700 hover:border-slate-900 active:border-b-0 active:translate-y-1'
+                            }`}
+                        >
+                            {char}
+                        </button>
+                    ))}
+                </div>
+            )}
+            
+            {feedback === 'correct' && (
+                 <div className="p-5 bg-emerald-950/30 border border-emerald-900/50 rounded-2xl animate-in slide-in-from-bottom text-center">
+                    <p className="text-xl font-bold text-emerald-400">Correct!</p>
+                </div>
+            )}
+            
+            {feedback === 'wrong' && (
+                 <div className="p-5 bg-red-950/30 border border-red-900/50 rounded-2xl animate-in slide-in-from-bottom text-center">
+                    <p className="text-[10px] font-black text-red-500 uppercase tracking-widest mb-1">Correct Answer</p>
+                    <p className="text-xl font-bold text-slate-100">{current.card.front}</p>
+                </div>
+            )}
         </div>
       )}
 
