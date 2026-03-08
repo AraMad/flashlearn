@@ -144,7 +144,9 @@ const App: React.FC = () => {
             <MyTerms />
           )}
 
-          <Footer />
+          {!(currentScreen === 'study' && (activeStudyMode === 'REVIEW' || activeStudyMode === 'LEARN' || activeStudyMode === 'TEST')) && (
+            <Footer />
+          )}
         </div>
 
         {/* Mobile FAB */}
