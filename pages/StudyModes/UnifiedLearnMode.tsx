@@ -223,6 +223,8 @@ export const UnifiedLearnMode: React.FC<{ setId: string, mode?: LearnMode, onExi
     setFeedback(isCorrect ? 'correct' : 'wrong');
     if (isCorrect) setScore(s => s + 1);
 
+    const delay = isCorrect ? (currentTask.type === 'TF' ? 1500 : 800) : 2000;
+
     setTimeout(() => {
       setFeedback(null);
       setInput('');
@@ -236,7 +238,7 @@ export const UnifiedLearnMode: React.FC<{ setId: string, mode?: LearnMode, onExi
         // Block finished
         setIsBlockFinished(true);
       }
-    }, isCorrect ? 800 : 2000);
+    }, delay);
   };
 
   const handleContinueBlock = () => {
@@ -252,7 +254,10 @@ export const UnifiedLearnMode: React.FC<{ setId: string, mode?: LearnMode, onExi
   const handleTypeSubmit = (e?: React.FormEvent) => {
     e?.preventDefault();
     if (!input.trim()) return;
-    const normalize = (text: string) => text.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const normalize = (text: string) => {
+      const normalized = text.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
+      return normalized.length > 0 ? normalized : text.trim().toLowerCase();
+    };
     const normalizedInput = normalize(input);
     const currentTask = blocks[currentBlockIndex][currentTaskIndex];
     const isCorrect = currentTask.validBacks.some(vb => normalize(vb) === normalizedInput);
@@ -271,7 +276,7 @@ export const UnifiedLearnMode: React.FC<{ setId: string, mode?: LearnMode, onExi
     // Handle auto-fill of non-alphanumeric characters
     if (input.length < targetUpper.length) {
         const nextChar = targetUpper[input.length];
-        if (!/[A-Z0-9]/.test(nextChar)) {
+        if (!/[\p{L}\p{N}]/u.test(nextChar)) {
              const newInput = input + nextChar;
              setInput(newInput);
              if (newInput.length === targetUpper.length) {
@@ -441,9 +446,9 @@ export const UnifiedLearnMode: React.FC<{ setId: string, mode?: LearnMode, onExi
         </div>
       )}
 
-      {current.type === 'TF' && feedback === 'wrong' && (
-        <div className="p-5 bg-red-950/30 border border-red-900/50 rounded-2xl animate-in slide-in-from-top-4">
-            <p className="text-[10px] font-black text-red-500 uppercase tracking-widest mb-1">Correct Answer</p>
+      {current.type === 'TF' && feedback && (
+        <div className={`p-5 border rounded-2xl animate-in slide-in-from-top-4 ${feedback === 'correct' ? 'bg-emerald-950/30 border-emerald-900/50' : 'bg-red-950/30 border-red-900/50'}`}>
+            <p className={`text-[10px] font-black uppercase tracking-widest mb-1 ${feedback === 'correct' ? 'text-emerald-500' : 'text-red-500'}`}>Correct Answer</p>
             <p className="text-xl font-bold text-slate-100">{current.card.back}</p>
         </div>
       )}

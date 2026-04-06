@@ -177,7 +177,10 @@ export const TestMode: React.FC<{ setId: string, onExit: () => void }> = ({ setI
         isCorrect = (answer === 'true' && q.tfIsCorrect!) || (answer === 'false' && !q.tfIsCorrect!);
     } else if (q.type === 'MCQ' || q.type === 'WRITTEN') {
         const normalize = (text: string) => {
-            if (q.type === 'WRITTEN') return text.toLowerCase().replace(/[^a-z0-9]/g, '');
+            if (q.type === 'WRITTEN') {
+                const normalized = text.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
+                return normalized.length > 0 ? normalized : text.trim().toLowerCase();
+            }
             return text.trim().toLowerCase();
         };
         const normalizedAnswer = normalize(answer);

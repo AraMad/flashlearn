@@ -293,7 +293,7 @@ export const Settings: React.FC<SettingsProps> = ({ onBack }) => {
            <div className="flex-1 flex flex-col items-center justify-end py-10 space-y-6">
               <div className="text-center opacity-20 grayscale">
                 <Database size={48} className="text-slate-400 mb-4 mx-auto" />
-                <p className="text-xs font-black uppercase tracking-[0.3em] text-slate-500">FlashLearn v1.0.0</p>
+                <p className="text-xs font-black uppercase tracking-[0.3em] text-slate-500">FlashLearn v1.2.0</p>
               </div>
 
               <button 
