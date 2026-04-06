@@ -11,7 +11,8 @@ import { MobileMenu } from './components/MobileMenu';
 import { Footer } from './components/Footer';
 import { LearnMode } from './types';
 import { DataStore } from './store';
-import { Plus, Menu } from 'lucide-react';
+import { Plus, Menu, Download, X } from 'lucide-react';
+import LZString from 'lz-string';
 
 type Screen = 'library' | 'details' | 'editor' | 'study' | 'settings' | 'my-terms';
 
@@ -20,11 +21,48 @@ const App: React.FC = () => {
   const [activeSetId, setActiveSetId] = useState<string | null>(null);
   const [activeStudyMode, setActiveStudyMode] = useState<LearnMode | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  
+  const [importData, setImportData] = useState<any>(null);
 
   // Initialize data persistence on mount
   useEffect(() => {
     DataStore.initialize();
+    
+    // Check for shared set in URL
+    const params = new URLSearchParams(window.location.search);
+    const importSetData = params.get('importSet');
+    if (importSetData) {
+      try {
+        const decompressed = LZString.decompressFromEncodedURIComponent(importSetData);
+        if (decompressed) {
+          const parsed = JSON.parse(decompressed);
+          if (parsed && parsed.title && Array.isArray(parsed.cards)) {
+            setImportData(parsed);
+          }
+        }
+      } catch (e) {
+        console.error("Failed to parse imported set", e);
+      }
+      // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
   }, []);
+
+  const handleImportConfirm = () => {
+    if (!importData) return;
+    const newId = DataStore.addSet(
+      importData.title,
+      importData.description || '',
+      importData.cards,
+      importData.tags || []
+    );
+    setImportData(null);
+    navigateToDetails(newId);
+  };
+
+  const handleImportCancel = () => {
+    setImportData(null);
+  };
 
   const navigateToLibrary = () => {
     setCurrentScreen('library');
@@ -157,6 +195,53 @@ const App: React.FC = () => {
           >
             <Plus size={28} />
           </button>
+        )}
+
+        {/* Import Modal */}
+        {importData && (
+          <div className="fixed inset-0 z-[100] bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="bg-slate-900 w-full max-w-md rounded-3xl shadow-2xl border border-slate-800 overflow-hidden animate-in zoom-in duration-200">
+              <div className="p-6 border-b border-slate-800 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-accent/20 text-accent rounded-xl">
+                    <Download size={24} />
+                  </div>
+                  <h4 className="text-xl font-bold text-slate-100">Import Set</h4>
+                </div>
+                <button onClick={handleImportCancel} className="text-slate-500 hover:text-slate-100">
+                  <X size={24} />
+                </button>
+              </div>
+              
+              <div className="p-6 space-y-4">
+                <p className="text-slate-300">
+                  You've received a shared flashcard set. Would you like to add it to your library?
+                </p>
+                <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800">
+                  <h5 className="font-bold text-slate-100 text-lg mb-1">{importData.title}</h5>
+                  {importData.description && (
+                    <p className="text-sm text-slate-400 mb-3 line-clamp-2">{importData.description}</p>
+                  )}
+                  <div className="flex items-center gap-2 text-xs font-bold text-slate-500">
+                    <span className="px-2 py-1 bg-slate-800 rounded-md">{importData.cards.length} cards</span>
+                    {importData.tags && importData.tags.length > 0 && (
+                      <span className="px-2 py-1 bg-slate-800 rounded-md">{importData.tags.length} tags</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-6 bg-slate-950 flex justify-end gap-3">
+                <button onClick={handleImportCancel} className="px-6 py-2 font-bold text-slate-400 hover:text-slate-200 transition-colors">Cancel</button>
+                <button 
+                  onClick={handleImportConfirm}
+                  className="px-8 py-2 bg-accent text-slate-950 font-bold rounded-xl hover:bg-accent-light transition-all shadow-lg shadow-accent/20"
+                >
+                  Import Set
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </main>
     </div>

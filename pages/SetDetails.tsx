@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { DataStore } from '../store';
 import { SetSummary, LearnMode } from '../types';
-import { ChevronLeft, Play, LayoutGrid, Gamepad2, Edit3, BookOpen, ClipboardCheck, Tag as TagIcon, Plus, X, RotateCcw, Check, HelpCircle, AlertCircle } from 'lucide-react';
+import { ChevronLeft, Play, LayoutGrid, Gamepad2, Edit3, BookOpen, ClipboardCheck, Tag as TagIcon, Plus, X, RotateCcw, Check, HelpCircle, AlertCircle, Share2 } from 'lucide-react';
+import LZString from 'lz-string';
 
 interface SetDetailsProps {
   setId: string;
@@ -16,6 +17,7 @@ export const SetDetails: React.FC<SetDetailsProps> = ({ setId, onBack, onStartSt
   const [isAddingTag, setIsAddingTag] = useState(false);
   const [allExistingTags, setAllExistingTags] = useState<string[]>([]);
   const [isRegenerating, setIsRegenerating] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
   
   // Modal state for Random Set config
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
@@ -91,6 +93,27 @@ export const SetDetails: React.FC<SetDetailsProps> = ({ setId, onBack, onStartSt
       refreshSet();
       setIsRegenerating(false);
     }, 600);
+  };
+
+  const handleShare = () => {
+    if (!set) return;
+    
+    const cards = DataStore.getCards().filter(c => c.setId === setId);
+    const exportData = {
+      title: set.title,
+      description: set.description,
+      cards: cards.map(c => ({ front: c.front, back: c.back }))
+    };
+
+    const jsonString = JSON.stringify(exportData);
+    const compressed = LZString.compressToEncodedURIComponent(jsonString);
+    
+    const shareUrl = `${window.location.origin}${window.location.pathname}?importSet=${compressed}`;
+    
+    navigator.clipboard.writeText(shareUrl).then(() => {
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000);
+    });
   };
 
   const handleAddTag = (tagToAdd: string) => {
@@ -171,6 +194,15 @@ export const SetDetails: React.FC<SetDetailsProps> = ({ setId, onBack, onStartSt
         </div>
         
         <div className="ml-auto flex gap-2">
+            {!set.isRandomSet && (
+              <button
+                onClick={handleShare}
+                className="flex items-center gap-2 px-4 py-2 text-slate-400 font-semibold hover:bg-slate-900 rounded-xl transition-all border border-transparent hover:border-slate-800"
+              >
+                {isCopied ? <Check size={20} className="text-emerald-500" /> : <Share2 size={20} />}
+                <span className="hidden sm:inline">{isCopied ? 'Copied Link!' : 'Share'}</span>
+              </button>
+            )}
             {set.isRandomSet ? (
                 <button 
                     onClick={handleOpenConfig}
