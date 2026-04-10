@@ -1,9 +1,9 @@
 
 const CACHE_NAME = 'flashlearn-v1';
 const ASSETS = [
-  '/flashlearn/',
-  '/flashlearn/index.html',
-  '/flashlearn/manifest.json'
+  '/',
+  '/index.html',
+  '/manifest.json'
 ];
 
 self.addEventListener('install', (event) => {
@@ -20,7 +20,7 @@ self.addEventListener('fetch', (event) => {
   if (event.request.mode === 'navigate') {
     event.respondWith(
       fetch(event.request).catch(() => {
-        return caches.match('/flashlearn/index.html');
+        return caches.match('/index.html');
       })
     );
     return;
