@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { DataStore } from '../../store';
 import { CardEntity } from '../../types';
 import { ChevronLeft, Timer, Trophy, RotateCcw } from 'lucide-react';
+import { trackEvent } from '../../analytics';
 
 interface Tile {
   id: string;
@@ -94,6 +95,7 @@ export const MatchMode: React.FC<{ setId: string, onExit: () => void }> = ({ set
         DataStore.updateStudyState(tile.cardId, true);
 
         if (newTiles.every(t => t.isMatched)) {
+          trackEvent('set_finished', { set_id: setId, mode: 'Match' });
           setIsFinished(true);
         }
       } else {

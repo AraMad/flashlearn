@@ -13,6 +13,7 @@ import { LearnMode } from './types';
 import { DataStore } from './store';
 import { Plus, Menu, Download, X } from 'lucide-react';
 import LZString from 'lz-string';
+import { trackEvent } from './analytics';
 
 type Screen = 'library' | 'details' | 'editor' | 'study' | 'settings' | 'my-terms';
 
@@ -27,11 +28,13 @@ const App: React.FC = () => {
   // Initialize data persistence on mount
   useEffect(() => {
     DataStore.initialize();
+    trackEvent('app_open');
     
     // Check for shared set in URL
     const params = new URLSearchParams(window.location.search);
     const importSetData = params.get('importSet');
     if (importSetData) {
+      trackEvent('set_link_clicked', { is_new_user: !localStorage.getItem('flashlearn_data') });
       try {
         const decompressed = LZString.decompressFromEncodedURIComponent(importSetData);
         if (decompressed) {
@@ -56,6 +59,7 @@ const App: React.FC = () => {
       importData.cards,
       importData.tags || []
     );
+    trackEvent('set_imported', { set_id: newId });
     setImportData(null);
     navigateToDetails(newId);
   };

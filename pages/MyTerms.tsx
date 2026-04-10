@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { DataStore } from '../store';
 import { CardEntity } from '../types';
 import { Search, BookOpen } from 'lucide-react';
+import { trackEvent } from '../analytics';
 
 export const MyTerms: React.FC = () => {
   const [cards, setCards] = useState<CardEntity[]>([]);
@@ -12,6 +13,15 @@ export const MyTerms: React.FC = () => {
     const allCards = DataStore.getCards();
     setCards(allCards);
   }, []);
+
+  useEffect(() => {
+    if (searchQuery.trim().length > 2) {
+      const timeoutId = setTimeout(() => {
+        trackEvent('dictionary_word_searched');
+      }, 1000);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [searchQuery]);
 
   const filteredCards = cards.filter(card => 
     card.front.toLowerCase().includes(searchQuery.toLowerCase()) ||

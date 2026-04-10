@@ -391,7 +391,7 @@ export class DataStore {
     return this.safeParse<{ timestamp: number, filename: string } | null>(STORAGE_KEYS.BACKUP_INFO, null);
   }
 
-  static exportData() {
+  static exportData(): { size: number, setsCount: number, cardsCount: number } {
     const payload: BackupPayload = {
       signature: BACKUP_SIGNATURE,
       version: 1,
@@ -412,7 +412,8 @@ export class DataStore {
       exportedAt: Date.now()
     };
 
-    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const jsonString = JSON.stringify(payload, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const filename = `flashlearn_backup_${new Date().toISOString().split('T')[0]}.json`;
     
@@ -426,6 +427,12 @@ export class DataStore {
       timestamp: Date.now(),
       filename: filename
     });
+
+    return {
+      size: blob.size,
+      setsCount: payload.data.sets.length,
+      cardsCount: payload.data.cards.length
+    };
   }
 
   static async importData(file: File): Promise<boolean> {

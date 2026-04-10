@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { DataStore } from '../store';
 import { SetSummary } from '../types';
 import { Search, Star, Clock, BookOpen, Trash2, Edit2, Tag, Database, AlertCircle, ArrowRight, Shuffle, X, Check, HelpCircle } from 'lucide-react';
+import { trackEvent } from '../analytics';
 
 interface LibraryProps {
   onSelectSet: (id: string) => void;
@@ -21,7 +22,11 @@ export const Library: React.FC<LibraryProps> = ({ onSelectSet, onEditSet, onNavi
 
   useEffect(() => {
     setSets(DataStore.getSetSummaries());
-    setShowBackupReminder(DataStore.shouldShowBackupReminder());
+    const shouldShow = DataStore.shouldShowBackupReminder();
+    setShowBackupReminder(shouldShow);
+    if (shouldShow) {
+      trackEvent('backup_reminder_shown', { trigger_reason: 'time_or_count', total_sets_count: DataStore.getSetSummaries().length });
+    }
   }, []);
 
   const allTags = useMemo(() => {
@@ -71,6 +76,7 @@ export const Library: React.FC<LibraryProps> = ({ onSelectSet, onEditSet, onNavi
     e.stopPropagation();
     if (confirm('Delete this set forever?')) {
       DataStore.deleteSet(id);
+      trackEvent('set_deleted');
       setSets(DataStore.getSetSummaries());
       setShowBackupReminder(DataStore.shouldShowBackupReminder());
     }
@@ -100,6 +106,12 @@ export const Library: React.FC<LibraryProps> = ({ onSelectSet, onEditSet, onNavi
   const handleCreateMagicSet = () => {
     const newId = DataStore.createRandomSet(selectedTagsForMagic, randomWordCount);
     if (newId) {
+      trackEvent('random_set_generated', { 
+        word_count: randomWordCount, 
+        tags_count: selectedTagsForMagic.length, 
+        tags_list: selectedTagsForMagic.join(','),
+        source_sets_count: sets.length
+      });
       setSets(DataStore.getSetSummaries());
       setIsTagModalOpen(false);
       onSelectSet(newId);

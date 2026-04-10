@@ -3,6 +3,7 @@ import { DataStore } from '../store';
 import { SetSummary, LearnMode } from '../types';
 import { ChevronLeft, Play, LayoutGrid, Gamepad2, Edit3, BookOpen, ClipboardCheck, Tag as TagIcon, Plus, X, RotateCcw, Check, HelpCircle, AlertCircle, Share2 } from 'lucide-react';
 import LZString from 'lz-string';
+import { trackEvent } from '../analytics';
 
 interface SetDetailsProps {
   setId: string;
@@ -111,6 +112,7 @@ export const SetDetails: React.FC<SetDetailsProps> = ({ setId, onBack, onStartSt
     const shareUrl = `${window.location.origin}${window.location.pathname}?importSet=${compressed}`;
     
     navigator.clipboard.writeText(shareUrl).then(() => {
+      trackEvent('set_shared', { set_id: setId });
       setIsCopied(true);
       setTimeout(() => setIsCopied(false), 2000);
     });

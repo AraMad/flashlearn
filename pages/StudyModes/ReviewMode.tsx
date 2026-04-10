@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { DataStore } from '../../store';
 import { CardEntity } from '../../types';
 import { ChevronLeft, RotateCw, Check, X, RotateCcw, ArrowLeftRight } from 'lucide-react';
+import { trackEvent } from '../../analytics';
 
 export const ReviewMode: React.FC<{ setId: string, onExit: () => void }> = ({ setId, onExit }) => {
   const [cards, setCards] = useState<CardEntity[]>([]);
@@ -36,6 +37,7 @@ export const ReviewMode: React.FC<{ setId: string, onExit: () => void }> = ({ se
       setIsFlipped(false);
       setDragOffset({ x: 0, y: 0 });
     } else {
+      trackEvent('set_finished', { set_id: setId, mode: 'Review' });
       setIsFinished(true);
     }
   };

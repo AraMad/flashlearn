@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { LearnMode } from '../types';
 import { ReviewMode } from '../pages/StudyModes/ReviewMode';
 import { UnifiedLearnMode } from '../pages/StudyModes/UnifiedLearnMode';
 import { MatchMode } from '../pages/StudyModes/MatchMode';
 import { TestMode } from '../pages/StudyModes/TestMode';
+import { trackEvent } from '../analytics';
+import { DataStore } from '../store';
 
 interface StudyContainerProps {
   setId: string;
@@ -12,6 +14,21 @@ interface StudyContainerProps {
 }
 
 export const StudyContainer: React.FC<StudyContainerProps> = ({ setId, mode, onExit }) => {
+  useEffect(() => {
+    const setSummary = DataStore.getSetSummaries().find(s => s.id === setId);
+    if (setSummary) {
+      if (mode === 'TEST') {
+        trackEvent('test_started', { set_id: setId });
+      } else {
+        trackEvent('study_session_started', { 
+          mode: mode, 
+          set_word_count: setSummary.cardCount, 
+          is_random_set: setSummary.isRandomSet 
+        });
+      }
+    }
+  }, [setId, mode]);
+
   switch (mode) {
     case 'REVIEW': return <ReviewMode setId={setId} onExit={onExit} />;
     case 'LEARN': return <UnifiedLearnMode setId={setId} onExit={onExit} />;

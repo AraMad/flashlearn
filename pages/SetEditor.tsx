@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { DataStore } from '../store';
 import { Plus, Trash2, X, FileText, LayoutList, Tag, AlertCircle } from 'lucide-react';
+import { trackEvent } from '../analytics';
 
 interface SetEditorProps {
   setId?: string;
@@ -59,6 +60,7 @@ export const SetEditor: React.FC<SetEditorProps> = ({ setId, onCancel, onSave })
     if (tag && !tags.includes(tag)) {
         setTags([...tags, tag]);
         setTagInput('');
+        trackEvent('tag_added');
     }
   };
 
@@ -81,9 +83,13 @@ export const SetEditor: React.FC<SetEditorProps> = ({ setId, onCancel, onSave })
 
     let finalId = setId;
     if (setId) {
+        const oldSet = DataStore.getSetSummaries().find(s => s.id === setId);
+        const wordCountChange = oldSet ? validCards.length - oldSet.cardCount : 0;
         finalId = DataStore.updateSet(setId, title, description, validCards, tags);
+        trackEvent('set_updated', { set_id: finalId, word_count_change: wordCountChange });
     } else {
         finalId = DataStore.addSet(title, description, validCards, tags);
+        trackEvent('set_created', { set_id: finalId, word_count: validCards.length, source_type: 'manual' });
     }
     onSave(finalId!);
   };
@@ -124,6 +130,7 @@ export const SetEditor: React.FC<SetEditorProps> = ({ setId, onCancel, onSave })
         alert(`Limit reached. Added ${cardsToAdd.length} cards out of ${newParsedCards.length} provided.`);
       }
 
+      trackEvent('bulk_import_used', { word_count: cardsToAdd.length, file_format: 'text' });
       setIsBulkImport(false);
       setBulkText('');
     }

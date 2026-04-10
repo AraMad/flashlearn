@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { DataStore } from '../../store';
 import { CardEntity, SetSummary } from '../../types';
 import { ChevronLeft, FileText, ChevronDown, Check, X, ArrowRight, RotateCcw, Award, Layers } from 'lucide-react';
+import { trackEvent } from '../../analytics';
 
 type TestState = 'setup' | 'running' | 'results';
 type QuestionType = 'TF' | 'MCQ' | 'WRITTEN';
@@ -194,8 +195,19 @@ export const TestMode: React.FC<{ setId: string, onExit: () => void }> = ({ setI
     if (currentIdx < questions.length - 1) {
       setCurrentIdx(currentIdx + 1);
     } else {
+      const correctCount = newUserAnswers.filter(a => a.isCorrect).length;
+      const scorePercentage = Math.round((correctCount / questions.length) * 100);
+      trackEvent('test_completed', { score_percentage: scorePercentage });
       setState('results');
     }
+  };
+
+  const handleExit = () => {
+    if (state === 'running') {
+      const progressPercentage = Math.round((currentIdx / questions.length) * 100);
+      trackEvent('study_session_abandoned', { mode: 'TEST', progress_percentage: progressPercentage });
+    }
+    onExit();
   };
 
   if (!setSummary) return null;

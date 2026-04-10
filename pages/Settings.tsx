@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { DataStore, BackupPayload } from '../store';
 import { Download, Upload, ShieldCheck, Database, Calendar, FileJson, AlertCircle, Loader2, ChevronLeft, Shield } from 'lucide-react';
+import { trackEvent } from '../analytics';
 
 interface SettingsProps {
   onBack?: () => void;
@@ -23,7 +24,12 @@ export const Settings: React.FC<SettingsProps> = ({ onBack }) => {
   }, []);
 
   const handleExport = () => {
-    DataStore.exportData();
+    const stats = DataStore.exportData();
+    trackEvent('backup_exported', { 
+      total_sets_count: stats.setsCount, 
+      total_words_count: stats.cardsCount, 
+      file_size_kb: Math.round(stats.size / 1024) 
+    });
     setBackupInfo(DataStore.getBackupInfo());
   };
 
@@ -51,6 +57,7 @@ export const Settings: React.FC<SettingsProps> = ({ onBack }) => {
         setImportProgress(100);
 
         if (success) {
+          trackEvent('backup_imported', { total_sets_count: payload.data.sets.length, is_overwrite_or_merge: 'overwrite' });
           setImportStatus({ 
             type: 'success', 
             message: 'Data restored successfully!',
