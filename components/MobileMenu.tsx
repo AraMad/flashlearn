@@ -1,5 +1,5 @@
 import React from 'react';
-import { Library, PlusSquare, Settings, BookOpen, X } from 'lucide-react';
+import { Library, PlusSquare, Settings, BookOpen, HelpCircle, X } from 'lucide-react';
 
 interface MobileMenuProps {
   isOpen: boolean;
@@ -8,6 +8,7 @@ interface MobileMenuProps {
   onNavigateMyTerms: () => void;
   onAddSet: () => void;
   onNavigateSettings: () => void;
+  onNavigateGuide: () => void;
 }
 
 export const MobileMenu: React.FC<MobileMenuProps> = ({
@@ -16,7 +17,8 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
   onNavigateLibrary,
   onNavigateMyTerms,
   onAddSet,
-  onNavigateSettings
+  onNavigateSettings,
+  onNavigateGuide
 }) => {
   if (!isOpen) return null;
 
@@ -65,13 +67,23 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
             <span className="font-medium">Create Set</span>
           </button>
 
-          <button 
-            onClick={() => { onNavigateSettings(); onClose(); }}
-            className="w-full flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-slate-800 hover:text-slate-100 rounded-xl transition-colors"
-          >
-            <Settings size={20} />
-            <span className="font-medium">Settings</span>
-          </button>
+          <div className="pt-4 mt-4 border-t border-slate-800">
+            <button 
+              onClick={() => { onNavigateGuide(); onClose(); }}
+              className="w-full flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-slate-800 hover:text-slate-100 rounded-xl transition-colors"
+            >
+              <HelpCircle size={20} />
+              <span className="font-medium">Guide</span>
+            </button>
+
+            <button 
+              onClick={() => { onNavigateSettings(); onClose(); }}
+              className="w-full flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-slate-800 hover:text-slate-100 rounded-xl transition-colors"
+            >
+              <Settings size={20} />
+              <span className="font-medium">Settings</span>
+            </button>
+          </div>
         </nav>
       </div>
     </div>

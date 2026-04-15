@@ -421,6 +421,10 @@ export const UnifiedLearnMode: React.FC<{ setId: string, mode?: LearnMode, onExi
         <p className="text-xs font-black text-slate-600 uppercase tracking-widest mb-6">{current.type === 'SPELL' ? 'Definition' : 'Term'}</p>
         <h3 className="text-3xl md:text-5xl font-bold text-slate-100 leading-tight">{current.type === 'SPELL' ? current.card.back : current.card.front}</h3>
         
+        {current.type !== 'SPELL' && current.card.example && (
+          <p className="mt-6 text-slate-400 text-sm md:text-base italic max-w-[80%]">"{current.card.example}"</p>
+        )}
+
         {current.type === 'TF' && (
           <div className="mt-12 space-y-2">
             <div className="h-0.5 w-12 bg-slate-800 mx-auto" />
@@ -450,6 +454,7 @@ export const UnifiedLearnMode: React.FC<{ setId: string, mode?: LearnMode, onExi
         <div className={`p-5 border rounded-2xl animate-in slide-in-from-top-4 ${feedback === 'correct' ? 'bg-emerald-950/30 border-emerald-900/50' : 'bg-red-950/30 border-red-900/50'}`}>
             <p className={`text-[10px] font-black uppercase tracking-widest mb-1 ${feedback === 'correct' ? 'text-emerald-500' : 'text-red-500'}`}>Correct Answer</p>
             <p className="text-xl font-bold text-slate-100">{current.card.back}</p>
+            {current.card.example && <p className="mt-2 text-slate-400 text-sm italic">"{current.card.example}"</p>}
         </div>
       )}
 
@@ -518,6 +523,7 @@ export const UnifiedLearnMode: React.FC<{ setId: string, mode?: LearnMode, onExi
             {feedback === 'correct' && (
                  <div className="p-5 bg-emerald-950/30 border border-emerald-900/50 rounded-2xl animate-in slide-in-from-bottom text-center">
                     <p className="text-xl font-bold text-emerald-400">Correct!</p>
+                    {current.card.example && <p className="mt-2 text-emerald-400/80 text-sm italic">"{current.card.example}"</p>}
                 </div>
             )}
             
@@ -525,6 +531,7 @@ export const UnifiedLearnMode: React.FC<{ setId: string, mode?: LearnMode, onExi
                  <div className="p-5 bg-red-950/30 border border-red-900/50 rounded-2xl animate-in slide-in-from-bottom text-center">
                     <p className="text-[10px] font-black text-red-500 uppercase tracking-widest mb-1">Correct Answer</p>
                     <p className="text-xl font-bold text-slate-100">{current.card.front}</p>
+                    {current.card.example && <p className="mt-2 text-slate-400 text-sm italic">"{current.card.example}"</p>}
                 </div>
             )}
         </div>
@@ -556,6 +563,7 @@ export const UnifiedLearnMode: React.FC<{ setId: string, mode?: LearnMode, onExi
             <div className="p-5 bg-red-950/30 border border-red-900/50 rounded-2xl animate-in slide-in-from-top-4">
                 <p className="text-[10px] font-black text-red-500 uppercase tracking-widest mb-1">Correct Answer</p>
                 <p className="text-xl font-bold text-slate-100">{current.card.back}</p>
+                {current.card.example && <p className="mt-2 text-slate-400 text-sm italic">"{current.card.example}"</p>}
             </div>
           )}
         </div>

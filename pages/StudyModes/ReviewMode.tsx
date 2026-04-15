@@ -106,6 +106,8 @@ export const ReviewMode: React.FC<{ setId: string, onExit: () => void }> = ({ se
   const backContent = isSwapped ? currentCard.front : currentCard.back;
   const frontLabel = isSwapped ? "DEFINITION" : "TERM";
   const backLabel = isSwapped ? "TERM" : "DEFINITION";
+  const frontExample = isSwapped && currentCard.example ? currentCard.example : null;
+  const backExample = !isSwapped && currentCard.example ? currentCard.example : null;
 
   const rotation = dragOffset.x * 0.08;
   const opacity = Math.min(Math.abs(dragOffset.x) / 300 + 0.5, 1);
@@ -191,6 +193,7 @@ export const ReviewMode: React.FC<{ setId: string, onExit: () => void }> = ({ se
           >
              <div className="absolute top-10 text-[10px] font-black text-slate-600 uppercase tracking-[0.3em]">{frontLabel}</div>
              <h3 className="text-3xl md:text-5xl font-bold text-slate-100 leading-tight">{frontContent}</h3>
+             {frontExample && <p className="mt-6 text-slate-400 text-sm md:text-base italic max-w-[80%]">"{frontExample}"</p>}
              <div className="absolute bottom-10 flex items-center gap-2 text-accent/30 text-[10px] font-black uppercase tracking-widest">
                 <RotateCw size={14} /> TAP TO FLIP
              </div>
@@ -207,6 +210,7 @@ export const ReviewMode: React.FC<{ setId: string, onExit: () => void }> = ({ se
           >
              <div className="absolute top-10 text-[10px] font-black text-accent/60 uppercase tracking-[0.3em]">{backLabel}</div>
              <h3 className="text-3xl md:text-5xl font-bold text-slate-100 leading-tight">{backContent}</h3>
+             {backExample && <p className="mt-6 text-slate-300 text-sm md:text-base italic max-w-[80%]">"{backExample}"</p>}
              <div className="absolute bottom-10 flex items-center gap-2 text-accent/30 text-[10px] font-black uppercase tracking-widest">
                 <RotateCw size={14} /> TAP TO FLIP
              </div>

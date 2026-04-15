@@ -130,7 +130,7 @@ export class DataStore {
     });
   }
 
-  static addSet(title: string, description: string, cards: { front: string, back: string }[], tags: string[] = []) {
+  static addSet(title: string, description: string, cards: { front: string, back: string, example?: string }[], tags: string[] = []) {
     const setId = crypto.randomUUID();
     const now = Date.now();
     
@@ -150,6 +150,7 @@ export class DataStore {
       setId,
       front: c.front,
       back: c.back,
+      example: c.example,
       orderIndex: i
     }));
 
@@ -168,7 +169,7 @@ export class DataStore {
     return setId;
   }
 
-  static updateSet(setId: string, title: string, description: string, cards: { front: string, back: string }[], tags?: string[]) {
+  static updateSet(setId: string, title: string, description: string, cards: { front: string, back: string, example?: string }[], tags?: string[]) {
     const sets = this.getSets();
     const setIndex = sets.findIndex(s => s.id === setId);
     if (setIndex === -1) return setId;
@@ -190,6 +191,7 @@ export class DataStore {
       setId,
       front: c.front,
       back: c.back,
+      example: c.example,
       orderIndex: i
     }));
 

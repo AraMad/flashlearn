@@ -5,6 +5,7 @@ import { SetDetails } from './pages/SetDetails';
 import { SetEditor } from './pages/SetEditor';
 import { Settings } from './pages/Settings';
 import { MyTerms } from './pages/MyTerms';
+import { Guide } from './pages/Guide';
 import { StudyContainer } from './components/StudyContainer';
 import { Sidebar } from './components/Sidebar';
 import { MobileMenu } from './components/MobileMenu';
@@ -15,7 +16,7 @@ import { Plus, Menu, Download, X } from 'lucide-react';
 import LZString from 'lz-string';
 import { trackEvent } from './analytics';
 
-type Screen = 'library' | 'details' | 'editor' | 'study' | 'settings' | 'my-terms';
+type Screen = 'library' | 'details' | 'editor' | 'study' | 'settings' | 'my-terms' | 'guide';
 
 const App: React.FC = () => {
   const [currentScreen, setCurrentScreen] = useState<Screen>('library');
@@ -89,6 +90,11 @@ const App: React.FC = () => {
     setActiveSetId(null);
   };
 
+  const navigateToGuide = () => {
+    setCurrentScreen('guide');
+    setActiveSetId(null);
+  };
+
   const navigateToMyTerms = () => {
     setCurrentScreen('my-terms');
     setActiveSetId(null);
@@ -109,6 +115,7 @@ const App: React.FC = () => {
         onNavigateMyTerms={navigateToMyTerms}
         onAddSet={() => navigateToEditor()} 
         onNavigateSettings={navigateToSettings}
+        onNavigateGuide={navigateToGuide}
       />
       
       <MobileMenu
@@ -118,6 +125,7 @@ const App: React.FC = () => {
         onNavigateMyTerms={navigateToMyTerms}
         onAddSet={() => navigateToEditor()}
         onNavigateSettings={navigateToSettings}
+        onNavigateGuide={navigateToGuide}
       />
 
       <main className="flex-1 overflow-y-auto pb-24 md:pb-0">
@@ -184,6 +192,10 @@ const App: React.FC = () => {
 
           {currentScreen === 'my-terms' && (
             <MyTerms />
+          )}
+
+          {currentScreen === 'guide' && (
+            <Guide onBack={navigateToLibrary} />
           )}
 
           {!(currentScreen === 'study' && (activeStudyMode === 'REVIEW' || activeStudyMode === 'LEARN' || activeStudyMode === 'TEST')) && (

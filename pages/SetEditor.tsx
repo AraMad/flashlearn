@@ -14,7 +14,7 @@ const MAX_CARDS = 50;
 export const SetEditor: React.FC<SetEditorProps> = ({ setId, onCancel, onSave }) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [cards, setCards] = useState<{ front: string, back: string }[]>([{ front: '', back: '' }]);
+  const [cards, setCards] = useState<{ front: string, back: string, example?: string }[]>([{ front: '', back: '', example: '' }]);
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState('');
   const [allExistingTags, setAllExistingTags] = useState<string[]>([]);
@@ -31,19 +31,19 @@ export const SetEditor: React.FC<SetEditorProps> = ({ setId, onCancel, onSave })
         setDescription(set.description || '');
         setTags(set.tags || []);
         const existingCards = DataStore.getCards().filter(c => c.setId === setId).sort((a, b) => a.orderIndex - b.orderIndex);
-        const mapped = existingCards.map(c => ({ front: c.front, back: c.back }));
-        setCards(mapped.length > 0 ? mapped : [{ front: '', back: '' }]);
+        const mapped = existingCards.map(c => ({ front: c.front, back: c.back, example: c.example || '' }));
+        setCards(mapped.length > 0 ? mapped : [{ front: '', back: '', example: '' }]);
       }
     }
   }, [setId]);
 
   const addCard = () => {
     if (cards.length < MAX_CARDS) {
-      setCards([...cards, { front: '', back: '' }]);
+      setCards([...cards, { front: '', back: '', example: '' }]);
     }
   };
 
-  const updateCard = (index: number, field: 'front' | 'back', value: string) => {
+  const updateCard = (index: number, field: 'front' | 'back' | 'example', value: string) => {
     const newCards = [...cards];
     newCards[index][field] = value;
     setCards(newCards);
@@ -96,7 +96,7 @@ export const SetEditor: React.FC<SetEditorProps> = ({ setId, onCancel, onSave })
 
   const handleBulkImport = () => {
     const lines = bulkText.split('\n').filter(l => l.trim().length > 0);
-    const newParsedCards: {front: string, back: string}[] = [];
+    const newParsedCards: {front: string, back: string, example?: string}[] = [];
     
     lines.forEach(line => {
       let delimiter = '-';
@@ -107,7 +107,8 @@ export const SetEditor: React.FC<SetEditorProps> = ({ setId, onCancel, onSave })
       if (parts.length >= 2) {
         newParsedCards.push({
           front: parts[0].trim(),
-          back: parts.slice(1).join(delimiter).trim()
+          back: parts[1].trim(),
+          example: parts.length > 2 ? parts.slice(2).join(delimiter).trim() : ''
         });
       }
     });
@@ -283,6 +284,16 @@ export const SetEditor: React.FC<SetEditorProps> = ({ setId, onCancel, onSave })
                 onChange={(e) => updateCard(index, 'back', e.target.value)}
               />
             </div>
+            <div className="flex-1 space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Example (Optional)</label>
+              <input 
+                type="text" 
+                placeholder="Example sentence"
+                className="w-full bg-transparent border-b border-slate-800 focus:border-accent outline-none py-1 transition-all text-slate-100"
+                value={card.example || ''}
+                onChange={(e) => updateCard(index, 'example', e.target.value)}
+              />
+            </div>
             <button 
               onClick={() => removeCard(index)}
               className="md:self-end p-2 text-slate-600 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
@@ -318,13 +329,13 @@ export const SetEditor: React.FC<SetEditorProps> = ({ setId, onCancel, onSave })
             </div>
             <div className="p-6 space-y-4">
               <p className="text-sm text-slate-300 bg-accent-light p-4 rounded-xl border border-accent-border">
-                Paste your data below. Use <strong>-</strong>, <strong>;</strong>, or <strong>,</strong> to separate front and back. Each new card should be on a new line. 
+                Paste your data below. Use <strong>-</strong>, <strong>;</strong>, or <strong>,</strong> to separate front, back, and example. Each new card should be on a new line. 
                 <br /><span className="text-accent font-bold mt-1 block">Maximum {MAX_CARDS} cards per set.</span>
               </p>
               <textarea 
                 rows={10}
                 className="w-full p-4 bg-slate-950 border border-slate-800 rounded-2xl font-mono text-sm focus:ring-2 focus:ring-accent outline-none text-slate-100"
-                placeholder="Word 1 - Definition 1&#10;Word 2 - Definition 2"
+                placeholder="Word 1 - Definition 1 - Example 1&#10;Word 2 - Definition 2"
                 value={bulkText}
                 onChange={(e) => setBulkText(e.target.value)}
               />

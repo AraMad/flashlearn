@@ -22,6 +22,7 @@ export interface CardEntity {
   setId: string;
   front: string;
   back: string;
+  example?: string;
   orderIndex: number;
 }
 

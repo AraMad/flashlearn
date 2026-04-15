@@ -1,14 +1,15 @@
 import React from 'react';
-import { Library, PlusSquare, Settings, BookOpen } from 'lucide-react';
+import { Library, PlusSquare, Settings, BookOpen, HelpCircle } from 'lucide-react';
 
 interface SidebarProps {
   onNavigate: () => void;
   onNavigateMyTerms: () => void;
   onAddSet: () => void;
   onNavigateSettings: () => void;
+  onNavigateGuide: () => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ onNavigate, onNavigateMyTerms, onAddSet, onNavigateSettings }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ onNavigate, onNavigateMyTerms, onAddSet, onNavigateSettings, onNavigateGuide }) => {
   return (
     <aside className="hidden md:flex flex-col w-64 bg-slate-900 border-r border-slate-800 h-screen sticky top-0 p-6">
       <div className="flex items-center gap-3 mb-10">
@@ -46,7 +47,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ onNavigate, onNavigateMyTerms,
         </button>
       </nav>
 
-      <div className="pt-6 border-t border-slate-800">
+      <div className="pt-6 border-t border-slate-800 space-y-1">
+        <button 
+          onClick={onNavigateGuide}
+          className="w-full flex items-center gap-3 px-3 py-2 text-slate-500 hover:bg-slate-800 hover:text-slate-300 rounded-lg transition-colors group"
+        >
+          <HelpCircle size={20} className="text-slate-600 group-hover:text-accent" />
+          <span className="font-medium">Guide</span>
+        </button>
         <button 
           onClick={onNavigateSettings}
           className="w-full flex items-center gap-3 px-3 py-2 text-slate-500 hover:bg-slate-800 hover:text-slate-300 rounded-lg transition-colors group"
