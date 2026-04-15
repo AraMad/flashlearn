@@ -103,7 +103,7 @@ export const SetDetails: React.FC<SetDetailsProps> = ({ setId, onBack, onStartSt
     const exportData = {
       title: set.title,
       description: set.description,
-      cards: cards.map(c => ({ front: c.front, back: c.back }))
+      cards: cards.map(c => ({ front: c.front, back: c.back, example: c.example }))
     };
 
     const jsonString = JSON.stringify(exportData);

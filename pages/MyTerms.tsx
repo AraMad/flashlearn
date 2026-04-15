@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { DataStore } from '../store';
 import { CardEntity } from '../types';
-import { Search, BookOpen } from 'lucide-react';
+import { Search, BookOpen, Copy, Check } from 'lucide-react';
 import { trackEvent } from '../analytics';
 
 export const MyTerms: React.FC = () => {
   const [cards, setCards] = useState<CardEntity[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   useEffect(() => {
     // Load all cards from all sets
@@ -22,6 +23,12 @@ export const MyTerms: React.FC = () => {
       return () => clearTimeout(timeoutId);
     }
   }, [searchQuery]);
+
+  const handleCopy = (text: string, id: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
 
   const filteredCards = cards.filter(card => 
     card.front.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -60,7 +67,18 @@ export const MyTerms: React.FC = () => {
               <div className="flex flex-col md:flex-row md:items-start gap-4">
                 <div className="flex-1">
                   <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Term</p>
-                  <p className="text-lg font-bold text-slate-200 group-hover:text-amber-500 transition-colors">{card.front}</p>
+                  <button 
+                    onClick={() => handleCopy(card.front, card.id)}
+                    className="text-left group/btn flex items-center gap-2"
+                    title="Click to copy term"
+                  >
+                    <p className="text-lg font-bold text-slate-200 group-hover/btn:text-amber-500 transition-colors">{card.front}</p>
+                    {copiedId === card.id ? (
+                      <Check size={16} className="text-emerald-500" />
+                    ) : (
+                      <Copy size={16} className="text-slate-600 opacity-0 group-hover/btn:opacity-100 transition-opacity" />
+                    )}
+                  </button>
                 </div>
                 <div className="hidden md:block w-px bg-slate-800 self-stretch mx-4"></div>
                 <div className="flex-1">
