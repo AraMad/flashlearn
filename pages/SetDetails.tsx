@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { DataStore } from '../store';
 import { SetSummary, LearnMode } from '../types';
-import { ChevronLeft, Play, LayoutGrid, Gamepad2, Edit3, BookOpen, ClipboardCheck, Tag as TagIcon, Plus, X, RotateCcw, Check, HelpCircle, AlertCircle, Share2 } from 'lucide-react';
+import { ChevronLeft, Play, LayoutGrid, Gamepad2, Edit3, BookOpen, ClipboardCheck, Tag as TagIcon, Plus, X, RotateCcw, Check, HelpCircle, AlertCircle, Share2, List } from 'lucide-react';
 import LZString from 'lz-string';
 import { trackEvent } from '../analytics';
 
@@ -177,6 +177,7 @@ export const SetDetails: React.FC<SetDetailsProps> = ({ setId, onBack, onStartSt
     { id: 'LEARN', label: 'Learn', icon: <BookOpen size={24} />, desc: 'Master cards with mixed tasks.', minCards: 4, color: 'bg-indigo-500 hover:bg-indigo-600' },
     { id: 'MATCH', label: 'Match', icon: <Gamepad2 size={24} />, desc: 'Competitive matching game.', minCards: 3, color: 'bg-orange-500 hover:bg-orange-600' },
     { id: 'TEST', label: 'Test', icon: <ClipboardCheck size={24} />, desc: 'Check your knowledge officially.', minCards: 4, color: 'bg-blue-500 hover:bg-blue-600' },
+    { id: 'PREVIEW', label: 'Set Content', icon: <List size={24} />, desc: 'View all terms and definitions.', minCards: 1, color: 'bg-purple-500 hover:bg-purple-600' },
   ];
 
   return (

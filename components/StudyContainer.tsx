@@ -4,6 +4,7 @@ import { ReviewMode } from '../pages/StudyModes/ReviewMode';
 import { UnifiedLearnMode } from '../pages/StudyModes/UnifiedLearnMode';
 import { MatchMode } from '../pages/StudyModes/MatchMode';
 import { TestMode } from '../pages/StudyModes/TestMode';
+import { PreviewMode } from '../pages/StudyModes/PreviewMode';
 import { trackEvent } from '../analytics';
 import { DataStore } from '../store';
 
@@ -30,6 +31,7 @@ export const StudyContainer: React.FC<StudyContainerProps> = ({ setId, mode, onE
   }, [setId, mode]);
 
   switch (mode) {
+    case 'PREVIEW': return <PreviewMode setId={setId} onExit={onExit} />;
     case 'REVIEW': return <ReviewMode setId={setId} onExit={onExit} />;
     case 'LEARN': return <UnifiedLearnMode setId={setId} onExit={onExit} />;
     case 'MATCH': return <MatchMode setId={setId} onExit={onExit} />;

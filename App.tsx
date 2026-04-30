@@ -198,7 +198,7 @@ const App: React.FC = () => {
             <Guide onBack={navigateToLibrary} />
           )}
 
-          {!(currentScreen === 'study' && (activeStudyMode === 'REVIEW' || activeStudyMode === 'LEARN' || activeStudyMode === 'TEST')) && (
+          {!(currentScreen === 'study' && (activeStudyMode === 'REVIEW' || activeStudyMode === 'LEARN' || activeStudyMode === 'TEST' || activeStudyMode === 'PREVIEW')) && (
             <Footer />
           )}
         </div>
