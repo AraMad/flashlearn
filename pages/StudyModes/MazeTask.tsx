@@ -38,6 +38,7 @@ export const MazeTask: React.FC<MazeTaskProps> = ({
       for (let dr = -1; dr <= 1; dr++) {
         for (let dc = -1; dc <= 1; dc++) {
           if (dr === 0 && dc === 0) continue;
+          if (Math.abs(dr) + Math.abs(dc) > 1) continue;
           const nr = r + dr;
           const nc = c + dc;
           if (nr >= 0 && nr < rows && nc >= 0 && nc < cols) {
@@ -89,7 +90,12 @@ export const MazeTask: React.FC<MazeTaskProps> = ({
 
   const handleInteract = (index: number) => {
     if (feedback) return;
-    if (selectedIndices.includes(index)) return;
+    if (selectedIndices.includes(index)) {
+      if (selectedIndices.length >= 2 && selectedIndices[selectedIndices.length - 2] === index) {
+        setSelectedIndices(prev => prev.slice(0, -1));
+      }
+      return;
+    }
 
     const nextExpectedChar = mazeWord[selectedIndices.length];
     
@@ -99,7 +105,7 @@ export const MazeTask: React.FC<MazeTaskProps> = ({
       const cols = Math.sqrt(grid.length);
       const r1 = Math.floor(lastIdx / cols), c1 = lastIdx % cols;
       const r2 = Math.floor(index / cols), c2 = index % cols;
-      if (Math.abs(r1 - r2) > 1 || Math.abs(c1 - c2) > 1) {
+      if (Math.abs(r1 - r2) + Math.abs(c1 - c2) !== 1) {
         isAdjacent = false;
       }
     } else {
@@ -112,7 +118,7 @@ export const MazeTask: React.FC<MazeTaskProps> = ({
       const newSelected = [...selectedIndices, index];
       setSelectedIndices(newSelected);
       if (newSelected.length === mazeWord.length) {
-        onResult(true);
+        setTimeout(() => onResult(true), 500);
       }
     } else {
       setShake(true);
