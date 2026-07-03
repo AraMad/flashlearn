@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { DataStore } from '../../store';
 import { CardEntity, LearnMode, StudyStatus } from '../../types';
 import { ChevronLeft, Check, X, ArrowRight, Sparkles } from 'lucide-react';
+import { MazeTask } from './MazeTask';
 
-type TaskType = 'TF' | 'MCQ' | 'TYPE' | 'SPELL';
+type TaskType = 'TF' | 'MCQ' | 'TYPE' | 'SPELL' | 'MAZE';
 
 interface Task {
   card: CardEntity;
@@ -54,7 +55,8 @@ export const UnifiedLearnMode: React.FC<{ setId: string, mode?: LearnMode, onExi
     else if (mode === 'MCQ') allowedTypes.push('MCQ');
     else if (mode === 'TYPE') allowedTypes.push('TYPE');
     else if (mode === 'SPELL') allowedTypes.push('SPELL');
-    else allowedTypes.push('TF', 'MCQ', 'TYPE', 'SPELL');
+    else if (mode === 'MAZE') allowedTypes.push('MAZE');
+    else allowedTypes.push('TF', 'MCQ', 'TYPE', 'SPELL', 'MAZE');
 
     const allGeneratedTasks: Task[] = [];
     
@@ -96,7 +98,7 @@ export const UnifiedLearnMode: React.FC<{ setId: string, mode?: LearnMode, onExi
               }
           }
           question = { options: uniqueOptions };
-        } else if (type === 'SPELL') {
+        } else if (type === 'SPELL' || type === 'MAZE') {
           question = {};
         }
         
@@ -418,10 +420,10 @@ export const UnifiedLearnMode: React.FC<{ setId: string, mode?: LearnMode, onExi
         {feedback === 'correct' && <div className="absolute inset-0 bg-emerald-500 flex items-center justify-center text-white animate-in fade-in duration-200 z-10"><Check size={80} strokeWidth={4} /></div>}
         {feedback === 'wrong' && <div className="absolute inset-0 bg-red-500 flex items-center justify-center text-white animate-in fade-in duration-200 z-10"><X size={80} strokeWidth={4} /></div>}
 
-        <p className="text-xs font-black text-slate-600 uppercase tracking-widest mb-6">{current.type === 'SPELL' ? 'Definition' : 'Term'}</p>
-        <h3 className="text-3xl md:text-5xl font-bold text-slate-100 leading-tight">{current.type === 'SPELL' ? current.card.back : current.card.front}</h3>
+        <p className="text-xs font-black text-slate-600 uppercase tracking-widest mb-6">{(current.type === 'SPELL' || current.type === 'MAZE') ? 'Definition' : 'Term'}</p>
+        <h3 className={`font-bold text-slate-100 leading-tight ${current.type === 'MAZE' ? 'text-xl md:text-3xl' : 'text-3xl md:text-5xl'}`}>{(current.type === 'SPELL' || current.type === 'MAZE') ? current.card.back : current.card.front}</h3>
         
-        {current.type !== 'SPELL' && current.card.example && (
+        {(current.type !== 'SPELL' && current.type !== 'MAZE') && current.card.example && (
           <p className="mt-6 text-slate-400 text-sm md:text-base italic max-w-[80%]">"{current.card.example}"</p>
         )}
 
@@ -567,6 +569,10 @@ export const UnifiedLearnMode: React.FC<{ setId: string, mode?: LearnMode, onExi
             </div>
           )}
         </div>
+      )}
+      
+      {current.type === 'MAZE' && (
+        <MazeTask card={current.card} onResult={handleAnswer} feedback={feedback} />
       )}
     </div>
   );

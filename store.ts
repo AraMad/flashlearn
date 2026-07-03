@@ -7,7 +7,8 @@ const STORAGE_KEYS = {
   STUDY_STATES: 'flashlearn_study_states_v1',
   BACKUP_INFO: 'flashlearn_backup_info_v1',
   LAST_MUTATION: 'flashlearn_last_mutation_v1',
-  STORAGE_VERSION: 'flashlearn_version'
+  STORAGE_VERSION: 'flashlearn_version',
+  STREAK_INFO: 'flashlearn_streak_info_v1'
 };
 
 const CURRENT_VERSION = 1;
@@ -71,6 +72,38 @@ export class DataStore {
 
   private static recordMutation() {
     this.safeSave(STORAGE_KEYS.LAST_MUTATION, Date.now());
+  }
+
+  static getStreakInfo(): { currentStreak: number, bestStreak: number, lastStudyDate: string } {
+    return this.safeParse(STORAGE_KEYS.STREAK_INFO, { currentStreak: 0, bestStreak: 0, lastStudyDate: '' });
+  }
+
+  static recordStudySession() {
+    const todayDate = new Date();
+    // Use local date string
+    const today = `${todayDate.getFullYear()}-${String(todayDate.getMonth() + 1).padStart(2, '0')}-${String(todayDate.getDate()).padStart(2, '0')}`;
+    const info = this.getStreakInfo();
+    
+    if (info.lastStudyDate === today) {
+      return; // Already studied today
+    }
+
+    const yesterdayDate = new Date(todayDate);
+    yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+    const yesterday = `${yesterdayDate.getFullYear()}-${String(yesterdayDate.getMonth() + 1).padStart(2, '0')}-${String(yesterdayDate.getDate()).padStart(2, '0')}`;
+    
+    if (info.lastStudyDate === yesterday) {
+      info.currentStreak += 1;
+    } else {
+      info.currentStreak = 1; // Streak broken or first time
+    }
+
+    if (info.currentStreak > info.bestStreak) {
+      info.bestStreak = info.currentStreak;
+    }
+    
+    info.lastStudyDate = today;
+    this.safeSave(STORAGE_KEYS.STREAK_INFO, info);
   }
 
   static shouldShowBackupReminder(): boolean {

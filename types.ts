@@ -40,7 +40,7 @@ export interface SetSummary extends SetEntity {
   learnedCount: number;
 }
 
-export type LearnMode = 'TF' | 'MCQ' | 'TYPE' | 'REVIEW' | 'MATCH' | 'LEARN' | 'TEST' | 'PREVIEW';
+export type LearnMode = 'TF' | 'MCQ' | 'TYPE' | 'SPELL' | 'MAZE' | 'REVIEW' | 'MATCH' | 'LEARN' | 'TEST' | 'PREVIEW';
 
 export interface LearnOptions {
   mode: LearnMode;

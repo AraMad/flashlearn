@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { DataStore } from '../store';
 import { SetSummary } from '../types';
-import { Search, Star, Clock, BookOpen, Trash2, Edit2, Tag, Database, AlertCircle, ArrowRight, Shuffle, X, Check, HelpCircle } from 'lucide-react';
+import { Search, Star, Clock, BookOpen, Trash2, Edit2, Tag, Database, AlertCircle, ArrowRight, Shuffle, X, Check, HelpCircle, Flame } from 'lucide-react';
 import { trackEvent } from '../analytics';
 
 interface LibraryProps {
@@ -19,9 +19,11 @@ export const Library: React.FC<LibraryProps> = ({ onSelectSet, onEditSet, onNavi
   const [isTagModalOpen, setIsTagModalOpen] = useState(false);
   const [selectedTagsForMagic, setSelectedTagsForMagic] = useState<string[]>([]);
   const [randomWordCount, setRandomWordCount] = useState(20);
+  const [streakInfo, setStreakInfo] = useState({ currentStreak: 0, bestStreak: 0, lastStudyDate: '' });
 
   useEffect(() => {
     setSets(DataStore.getSetSummaries());
+    setStreakInfo(DataStore.getStreakInfo());
     const shouldShow = DataStore.shouldShowBackupReminder();
     setShowBackupReminder(shouldShow);
     if (shouldShow) {
@@ -140,8 +142,18 @@ export const Library: React.FC<LibraryProps> = ({ onSelectSet, onEditSet, onNavi
     <div className="space-y-8 animate-in fade-in duration-500 flex flex-col min-h-[calc(100vh-8rem)]">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-bold text-slate-100">Your Library</h2>
-          <p className="text-slate-400 mt-1">Manage and track your learning progress.</p>
+          <h2 className="text-3xl font-bold text-slate-100">
+            Your Library
+          </h2>
+          <div className="text-slate-400 mt-2 md:mt-1 flex items-center gap-3 flex-wrap">
+            {streakInfo.currentStreak > 0 && (
+              <div className="flex items-center gap-1.5 px-3 py-1 bg-orange-500/20 text-orange-500 border border-orange-500/30 rounded-full text-sm font-bold shadow-lg shadow-orange-500/10">
+                <Flame size={16} className={streakInfo.currentStreak >= 3 ? "animate-pulse" : ""} />
+                <span>{streakInfo.currentStreak} Day Streak!</span>
+              </div>
+            )}
+            {streakInfo.bestStreak > 0 && <span className="text-slate-500 font-medium text-sm">Best streak: {streakInfo.bestStreak} days</span>}
+          </div>
         </div>
         
         <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">

@@ -101,6 +101,7 @@ const App: React.FC = () => {
   };
 
   const startStudy = (id: string, mode: LearnMode) => {
+    DataStore.recordStudySession();
     setActiveSetId(id);
     setActiveStudyMode(mode);
     setCurrentScreen('study');
