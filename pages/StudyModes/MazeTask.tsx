@@ -13,7 +13,7 @@ export const MazeTask: React.FC<MazeTaskProps> = ({
   feedback,
 }) => {
   const fullTargetWord = card.front.toUpperCase();
-  const mazeWord = fullTargetWord.replace(/\s+/g, "");
+  const mazeWord = fullTargetWord;
   const [grid, setGrid] = useState<{ char: string; id: number }[]>([]);
   const [startIdx, setStartIdx] = useState<number>(-1);
   const [selectedIndices, setSelectedIndices] = useState<number[]>([]);
@@ -76,9 +76,10 @@ export const MazeTask: React.FC<MazeTaskProps> = ({
     });
 
     const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const fillerChars = alphabet;
     for (let i = 0; i < size; i++) {
       if (newGrid[i] === null) {
-        newGrid[i] = alphabet[Math.floor(Math.random() * alphabet.length)];
+        newGrid[i] = fillerChars[Math.floor(Math.random() * fillerChars.length)];
       }
     }
 
@@ -157,13 +158,14 @@ export const MazeTask: React.FC<MazeTaskProps> = ({
   // We can just iterate `fullTargetWord` and keep a running counter of non-space chars.
   let revealedCount = selectedIndices.length;
   const wordDisplay = fullTargetWord.split("").map((char, idx) => {
+    const isRevealed = revealedCount > 0 || feedback === "wrong";
+    if (revealedCount > 0) revealedCount--;
+
     if (char === " ") {
       return (
         <div key={idx} className="w-4 sm:w-6 h-12 sm:h-14"></div>
       );
     }
-    const isRevealed = revealedCount > 0 || feedback === "wrong";
-    if (revealedCount > 0) revealedCount--;
     return (
       <div
         key={idx}
@@ -180,7 +182,7 @@ export const MazeTask: React.FC<MazeTaskProps> = ({
 
   return (
     <div
-      className={`flex flex-col items-center justify-center space-y-6 touch-none ${shake ? "animate-[shake_0.4s_ease-in-out]" : ""}`}
+      className={`flex flex-col items-center w-full max-w-full justify-center space-y-6 touch-none ${shake ? "animate-[shake_0.4s_ease-in-out]" : ""}`}
       onPointerUp={handlePointerUp}
       onPointerLeave={handlePointerUp}
     >
@@ -199,16 +201,17 @@ export const MazeTask: React.FC<MazeTaskProps> = ({
 
       {/* Grid */}
       {!feedback && grid.length > 0 && (
-        <div
-          className="relative grid gap-3 p-4 bg-slate-900/50 rounded-3xl"
-          style={{
-            gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
-          }}
-        >
-          <svg
-            className="absolute inset-0 pointer-events-none w-full h-full"
-            style={{ zIndex: 0 }}
+        <div className="w-full overflow-auto flex justify-center pb-2 px-2 no-scrollbar">
+          <div
+            className="relative grid gap-2 sm:gap-3 p-3 sm:p-4 bg-slate-900/50 rounded-3xl shrink-0"
+            style={{
+              gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
+            }}
           >
+            <svg
+              className="absolute inset-0 pointer-events-none w-full h-full"
+              style={{ zIndex: 0 }}
+            >
             {selectedIndices.length > 1 &&
               selectedIndices.map((idx, i) => {
                 if (i === 0) return null;
@@ -240,7 +243,7 @@ export const MazeTask: React.FC<MazeTaskProps> = ({
                 key={idx}
                 onPointerDown={(e) => handlePointerDown(idx, e)}
                 onPointerEnter={() => handlePointerEnter(idx)}
-                className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center text-xl sm:text-2xl font-black cursor-pointer select-none relative z-10 transition-all ${
+                className={`w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center text-lg sm:text-2xl font-black cursor-pointer select-none relative z-10 transition-all ${
                   isSelected
                     ? "bg-amber-500 text-slate-950 scale-95"
                     : isStartHint 
@@ -252,6 +255,7 @@ export const MazeTask: React.FC<MazeTaskProps> = ({
               </div>
             );
           })}
+          </div>
         </div>
       )}
 
