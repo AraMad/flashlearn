@@ -14,7 +14,16 @@
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
 
-      gtag('config', 'G-4C608GYE1S');
+      var clientId = localStorage.getItem('flashlearn_client_id');
+      if (!clientId) {
+        clientId = 'client_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+        localStorage.setItem('flashlearn_client_id', clientId);
+      }
+
+      gtag('config', 'G-4C608GYE1S', {
+        'client_id': clientId,
+        'cookie_flags': 'secure;samesite=none'
+      });
     </script>
 
     <!-- PWA Primary Tags -->
