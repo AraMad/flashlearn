@@ -196,7 +196,7 @@ const App: React.FC = () => {
           )}
 
           {currentScreen === 'guide' && (
-            <Guide onBack={navigateToLibrary} />
+            <Guide onBack={navigateToLibrary} onCreateSet={() => navigateToEditor()} />
           )}
 
           {!(currentScreen === 'study' && (activeStudyMode === 'REVIEW' || activeStudyMode === 'LEARN' || activeStudyMode === 'TEST' || activeStudyMode === 'PREVIEW')) && (
