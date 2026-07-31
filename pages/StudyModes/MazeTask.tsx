@@ -21,6 +21,18 @@ export const MazeTask: React.FC<MazeTaskProps> = ({
   const [shake, setShake] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
 
+  const isDraggingRef = useRef(false);
+  const selectedIndicesRef = useRef<number[]>([]);
+  const gridRef = useRef(grid);
+
+  useEffect(() => {
+    selectedIndicesRef.current = selectedIndices;
+  }, [selectedIndices]);
+
+  useEffect(() => {
+    gridRef.current = grid;
+  }, [grid]);
+
   useEffect(() => {
     let size = 9;
     while (size < mazeWord.length) {
@@ -85,78 +97,180 @@ export const MazeTask: React.FC<MazeTaskProps> = ({
 
     setGrid(newGrid.map((char, id) => ({ char, id })));
     setStartIdx(path[0]);
+    selectedIndicesRef.current = [];
     setSelectedIndices([]);
     setMistakes(0);
+    isDraggingRef.current = false;
+    setIsDragging(false);
   }, [card]);
+
+  const updateSelectedIndices = (newSelected: number[]) => {
+    selectedIndicesRef.current = newSelected;
+    setSelectedIndices(newSelected);
+  };
 
   const handleInteract = (index: number) => {
     if (feedback) return;
-    if (selectedIndices.includes(index)) {
-      if (selectedIndices.length >= 2 && selectedIndices[selectedIndices.length - 2] === index) {
-        setSelectedIndices(prev => prev.slice(0, -1));
+    const currentSelected = selectedIndicesRef.current;
+
+    if (currentSelected.includes(index)) {
+      const existingPos = currentSelected.indexOf(index);
+      if (existingPos < currentSelected.length - 1) {
+        updateSelectedIndices(currentSelected.slice(0, existingPos + 1));
       }
       return;
     }
 
-    const nextExpectedChar = mazeWord[selectedIndices.length];
-    
-    let isAdjacent = true;
-    if (selectedIndices.length > 0) {
-      const lastIdx = selectedIndices[selectedIndices.length - 1];
-      const cols = Math.sqrt(grid.length);
-      const r1 = Math.floor(lastIdx / cols), c1 = lastIdx % cols;
-      const r2 = Math.floor(index / cols), c2 = index % cols;
-      if (Math.abs(r1 - r2) + Math.abs(c1 - c2) !== 1) {
-        isAdjacent = false;
+    if (currentSelected.length === 0) {
+      if (index === startIdx) {
+        updateSelectedIndices([startIdx]);
       }
-    } else {
-      if (index !== startIdx) {
-        isAdjacent = false;
-      }
+      return;
     }
 
-    if (isAdjacent && grid[index].char === nextExpectedChar) {
-      const newSelected = [...selectedIndices, index];
-      setSelectedIndices(newSelected);
-      if (newSelected.length === mazeWord.length) {
-        setTimeout(() => onResult(true), 500);
-      }
-    } else {
-      setShake(true);
-      setTimeout(() => setShake(false), 400);
-      const newMistakes = mistakes + 1;
-      setMistakes(newMistakes);
-      
-      // Reset connections (implied by "rezetted to the latest correct position")
-      // We already do this by just NOT adding the wrong letter. The continuous line remains at the last correct node.
+    const cols = Math.sqrt(grid.length);
+    const lastIdx = currentSelected[currentSelected.length - 1];
+    const r1 = Math.floor(lastIdx / cols),
+      c1 = lastIdx % cols;
+    const r2 = Math.floor(index / cols),
+      c2 = index % cols;
 
-      if (newMistakes >= 3) {
-        onResult(false);
+    // Do not count toward mistake move by diagonal, simply ignore it
+    if (Math.abs(r1 - r2) === 1 && Math.abs(c1 - c2) === 1) {
+      return;
+    }
+
+    // Must be orthogonally adjacent
+    if (Math.abs(r1 - r2) + Math.abs(c1 - c2) === 1) {
+      const newSelected = [...currentSelected, index];
+      updateSelectedIndices(newSelected);
+
+      if (newSelected.length === mazeWord.length) {
+        const allCorrect = newSelected.every(
+          (idx, i) => grid[idx]?.char === mazeWord[i]
+        );
+        if (allCorrect) {
+          isDraggingRef.current = false;
+          setIsDragging(false);
+          setTimeout(() => onResult(true), 500);
+        }
       }
     }
   };
 
   const handlePointerDown = (index: number, e: React.PointerEvent) => {
-    (e.target as Element).releasePointerCapture(e.pointerId);
+    if (feedback) return;
+    try {
+      (e.target as Element).releasePointerCapture(e.pointerId);
+    } catch (_) {}
+    isDraggingRef.current = true;
     setIsDragging(true);
     handleInteract(index);
   };
 
   const handlePointerEnter = (index: number) => {
-    if (isDragging) {
+    if (isDraggingRef.current) {
       handleInteract(index);
     }
   };
 
   const handlePointerUp = () => {
+    if (!isDraggingRef.current) return;
+    isDraggingRef.current = false;
     setIsDragging(false);
+
+    if (feedback) return;
+
+    const currentSelected = selectedIndicesRef.current;
+    let firstWrongIdx = -1;
+    for (let i = 0; i < currentSelected.length; i++) {
+      if (gridRef.current[currentSelected[i]]?.char !== mazeWord[i]) {
+        firstWrongIdx = i;
+        break;
+      }
+    }
+
+    if (firstWrongIdx !== -1) {
+      const validPrefix = currentSelected.slice(0, firstWrongIdx);
+      updateSelectedIndices(validPrefix);
+
+      setShake(true);
+      setTimeout(() => setShake(false), 400);
+
+      setMistakes((prev) => {
+        const next = prev + 1;
+        if (next >= 3) {
+          onResult(false);
+        }
+        return next;
+      });
+    }
   };
+
+  useEffect(() => {
+    const handleGlobalPointerMove = (e: PointerEvent | TouchEvent) => {
+      if (!isDraggingRef.current) return;
+      let clientX: number | undefined;
+      let clientY: number | undefined;
+
+      if ("touches" in e && e.touches && e.touches.length > 0) {
+        clientX = e.touches[0].clientX;
+        clientY = e.touches[0].clientY;
+      } else if ("clientX" in e) {
+        clientX = (e as PointerEvent).clientX;
+        clientY = (e as PointerEvent).clientY;
+      }
+
+      if (clientX === undefined || clientY === undefined) return;
+
+      const el = document.elementFromPoint(clientX, clientY);
+      if (el) {
+        const cellEl = el.closest("[data-cell-index]");
+        if (cellEl) {
+          const indexAttr = cellEl.getAttribute("data-cell-index");
+          if (indexAttr !== null) {
+            const index = parseInt(indexAttr, 10);
+            if (!isNaN(index)) {
+              handleInteract(index);
+            }
+          }
+        }
+      }
+    };
+
+    const handleGlobalPointerUp = () => {
+      if (isDraggingRef.current) {
+        handlePointerUp();
+      }
+    };
+
+    window.addEventListener("pointermove", handleGlobalPointerMove, { passive: true });
+    window.addEventListener("touchmove", handleGlobalPointerMove, { passive: true });
+    window.addEventListener("pointerup", handleGlobalPointerUp);
+    window.addEventListener("touchend", handleGlobalPointerUp);
+    window.addEventListener("touchcancel", handleGlobalPointerUp);
+
+    return () => {
+      window.removeEventListener("pointermove", handleGlobalPointerMove);
+      window.removeEventListener("touchmove", handleGlobalPointerMove);
+      window.removeEventListener("pointerup", handleGlobalPointerUp);
+      window.removeEventListener("touchend", handleGlobalPointerUp);
+      window.removeEventListener("touchcancel", handleGlobalPointerUp);
+    };
+  }, [mazeWord.length, feedback, onResult]);
 
   const cols = Math.sqrt(grid.length);
 
-  // We need to map `mazeWord` index to `fullTargetWord` index for displaying the revealed letters.
-  // We can just iterate `fullTargetWord` and keep a running counter of non-space chars.
-  let revealedCount = selectedIndices.length;
+  let validPrefixLength = 0;
+  for (let i = 0; i < selectedIndices.length; i++) {
+    if (grid[selectedIndices[i]]?.char === mazeWord[i]) {
+      validPrefixLength++;
+    } else {
+      break;
+    }
+  }
+
+  let revealedCount = validPrefixLength;
   const wordDisplay = fullTargetWord.split("").map((char, idx) => {
     const isRevealed = revealedCount > 0 || feedback === "wrong";
     if (revealedCount > 0) revealedCount--;
@@ -203,7 +317,7 @@ export const MazeTask: React.FC<MazeTaskProps> = ({
       {!feedback && grid.length > 0 && (
         <div className="w-full overflow-auto flex justify-center pb-2 px-2 no-scrollbar">
           <div
-            className="relative grid gap-2 sm:gap-3 p-3 sm:p-4 bg-slate-900/50 rounded-3xl shrink-0"
+            className="relative grid gap-2 sm:gap-3 p-3 sm:p-4 bg-slate-900/50 rounded-3xl shrink-0 touch-none select-none"
             style={{
               gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
             }}
@@ -241,9 +355,10 @@ export const MazeTask: React.FC<MazeTaskProps> = ({
             return (
               <div
                 key={idx}
+                data-cell-index={idx}
                 onPointerDown={(e) => handlePointerDown(idx, e)}
                 onPointerEnter={() => handlePointerEnter(idx)}
-                className={`w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center text-lg sm:text-2xl font-black cursor-pointer select-none relative z-10 transition-all ${
+                className={`w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center text-lg sm:text-2xl font-black cursor-pointer select-none touch-none relative z-10 transition-all ${
                   isSelected
                     ? "bg-amber-500 text-slate-950 scale-95"
                     : isStartHint 
