@@ -35,6 +35,15 @@ jobs:
           rm -rf node_modules package-lock.json
           npm install
 
+      - name: Determine Base URL
+        id: set-base-url
+        run: |
+          if [[ "${{ github.event.repository.name }}" == "fl_stage" ]]; then
+            echo "BASE_PATH=/${{ github.event.repository.name }}/" >> $GITHUB_ENV
+          else
+            echo "BASE_PATH=/" >> $GITHUB_ENV
+          fi
+
       - name: Build
         run: npm run build
 
